@@ -53,10 +53,41 @@
     }
     .topbar{
       display:grid; gap:8px; margin:8px 0 10px;
-      grid-template-columns: 1fr 1fr; /* dos por fila en móvil */
+      grid-template-columns: 1fr;
     }
     @media (min-width:520px){
-      .topbar{ grid-template-columns: 1fr 1fr 1fr; } /* tres por fila en desktop */
+      .topbar{ grid-template-columns: 1fr 1fr 1fr; }
+    }
+    /* Modal */
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 1000;
+      left: 0; top: 0;
+      width: 100%; height: 100%;
+      background-color: rgba(0,0,0,0.6);
+    }
+    .modal-content {
+      background: white;
+      margin: 20% auto;
+      padding: 20px;
+      border-radius: 12px;
+      width: 80%;
+      max-width: 400px;
+      text-align: center;
+    }
+    .modal button {
+      margin-top: 1rem;
+      padding: 0.5rem 1rem;
+      background: var(--celeste);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+    .modal button:hover { background: var(--azul); }
+    .buttons{
+      display:grid; gap:10px; margin-top:16px;
     }
   </style>
 </head>
@@ -66,13 +97,6 @@
       <h1>Quiz: Estatuto Docente</h1>
       <p>Capítulo XII — Del Ingreso</p>
     </header>
-
-    <!-- Top buttons -->
-    <div class="topbar">
-      <button class="btn violet" id="btnToggleLB">📊 Ver / ocultar posiciones</button>
-      <button class="btn dark" id="btnEstatuto">📕 Descargar Estatuto</button>
-      <button class="btn alt" id="btnClear">🗑️ Limpiar tabla</button>
-    </div>
 
     <!-- Game -->
     <div id="game">
@@ -110,82 +134,40 @@
       </table>
     </div>
 
+    <!-- Botones abajo -->
+    <div class="buttons topbar">
+      <button class="btn violet" id="btnToggleLB">📊 Ver / ocultar posiciones</button>
+      <button class="btn dark" id="btnEstatuto">📕 Descargar Estatuto</button>
+      <button class="btn alt" id="btnClear">🗑️ Limpiar tabla</button>
+    </div>
+
     <p class="muted">Puntaje: 100 por acierto + 5 por cada segundo ahorrado.</p>
   </div>
 
+  <!-- Modal -->
+  <div id="answerModal" class="modal">
+    <div class="modal-content">
+      <p id="answerText"></p>
+      <button onclick="nextQuestionModal()">Siguiente</button>
+    </div>
+  </div>
+
   <script>
-    // ====== CONFIG ======
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwX8whu7tz-FnGiZ0Eo9rzOJZKjxF3fQQWpaTXpV98vDG0mIDsg0Ygca_WyEiRYcSOG/exec";
     const TIEMPO_PREGUNTA = 20;
 
-    // ====== PREGUNTAS (6) ======
     const questions = [
-      {
-        q: "¿Cómo se realiza el ingreso a la docencia según el Cap. XII?",
-        options: [
-          "Por orden de mérito en listados oficiales",
-          "Por recomendación de directivos",
-          "Por sorteo de cargos",
-          "Por votación en la escuela"
-        ],
-        a: 0
-      },
-      {
-        q: "¿Qué organismo confecciona y aprueba los listados de aspirantes?",
-        options: [
-          "Consejo Escolar",
-          "Dirección General de Cultura y Educación",
-          "Sindicatos Docentes",
-          "Jefatura Distrital"
-        ],
-        a: 1
-      },
-      {
-        q: "Requisito básico para figurar en los listados de ingreso:",
-        options: [
-          "Antigüedad docente comprobable",
-          "Tener título habilitante",
-          "Experiencia previa mínima",
-          "Recomendación gremial"
-        ],
-        a: 1
-      },
-      {
-        q: "Periodicidad de inscripción y actualización de listados:",
-        options: ["Anual", "Cada 3 años", "Cada 5 años", "A demanda de cada escuela"],
-        a: 0
-      },
-      {
-        q: "Criterio principal para ordenar a los aspirantes:",
-        options: [
-          "Edad del aspirante",
-          "Fecha de inscripción",
-          "Puntaje del escalafón (antecedentes y títulos)",
-          "Entrevista personal"
-        ],
-        a: 2
-      },
-      {
-        q: "¿Cómo se otorgan los cargos a los aspirantes?",
-        options: [
-          "En acto público según orden de mérito",
-          "Por decisión del director",
-          "Por concurso de antecedentes y oposición en cada escuela",
-          "Por inscripción espontánea el día del inicio"
-        ],
-        a: 0
-      }
+      {q:"¿Cómo se realiza el ingreso a la docencia según el Cap. XII?", options:["Por orden de mérito","Por recomendación","Por sorteo","Por votación"], a:0},
+      {q:"¿Qué organismo confecciona y aprueba los listados de aspirantes?", options:["Consejo Escolar","DGCyE","Sindicatos","Jefatura Distrital"], a:1},
+      {q:"Requisito básico para figurar en los listados de ingreso:", options:["Antigüedad","Título habilitante","Experiencia","Recomendación"], a:1},
+      {q:"Periodicidad de inscripción y actualización de listados:", options:["Anual","Cada 3 años","Cada 5 años","A demanda"], a:0},
+      {q:"Criterio principal para ordenar a los aspirantes:", options:["Edad","Fecha de inscripción","Puntaje","Entrevista"], a:2},
+      {q:"¿Cómo se otorgan los cargos a los aspirantes?", options:["Acto público","Decisión del director","Concurso","Inscripción espontánea"], a:0}
     ];
 
-    // ====== ESTADO DE JUEGO ======
-    let current = 0;
-    let score = 0;
-    let timer = null;
-    let timeLeft = TIEMPO_PREGUNTA;
-    let totalTimeUsed = 0;
-    let playerName = null;
+    let current = 0, score = 0, timer=null, timeLeft=TIEMPO_PREGUNTA, totalTimeUsed=0;
+    let playerName=null;
 
-    // ====== NODOS ======
     const elTimer = document.getElementById("timer");
     const elQuestion = document.getElementById("question");
     const elOptions = document.getElementById("options");
@@ -197,14 +179,11 @@
     const elLBWrap = document.getElementById("leaderboardWrap");
     const elLBTbody = document.getElementById("leaderboardBody");
 
-    // ====== INICIO ======
     startQuiz();
 
     function startQuiz(){
-      score = 0;
-      current = 0;
-      totalTimeUsed = 0;
-      playerName = prompt("Ingresá tu nombre para jugar:") || "Anónimo";
+      score=0; current=0; totalTimeUsed=0;
+      playerName=prompt("Ingresá tu nombre para jugar:")||"Anónimo";
       elResult.classList.add("hidden");
       elGame.classList.remove("hidden");
       renderQuestion();
@@ -215,163 +194,99 @@
       const q = questions[current];
       elQuestion.textContent = q.q;
       elOptions.innerHTML = "";
-      q.options.forEach((opt, i) => {
-        const btn = document.createElement("button");
-        btn.className = "btn";
-        btn.textContent = opt;
-        btn.onclick = () => selectAnswer(i, btn);
+      q.options.forEach((opt,i)=>{
+        const btn=document.createElement("button");
+        btn.className="btn";
+        btn.textContent=opt;
+        btn.onclick=()=>selectAnswer(i,btn);
         elOptions.appendChild(btn);
       });
-      timeLeft = TIEMPO_PREGUNTA;
-      elTimer.textContent = timeLeft;
-      elProgress.textContent = `Pregunta ${current+1} de ${questions.length}`;
+      timeLeft=TIEMPO_PREGUNTA;
+      elTimer.textContent=timeLeft;
+      elProgress.textContent=`Pregunta ${current+1} de ${questions.length}`;
     }
 
     function startTimer(){
       clearInterval(timer);
-      timer = setInterval(() => {
+      timer=setInterval(()=>{
         timeLeft--;
-        elTimer.textContent = timeLeft;
-        if(timeLeft <= 0){
+        elTimer.textContent=timeLeft;
+        if(timeLeft<=0){
           clearInterval(timer);
-          totalTimeUsed += TIEMPO_PREGUNTA; // agotó el tiempo
-          nextQuestion();
+          totalTimeUsed+=TIEMPO_PREGUNTA;
+          showCorrectModal(-1);
         }
-      }, 1000);
+      },1000);
     }
 
-    function selectAnswer(idx, btn){
-      // desactivar para evitar doble click
-      [...elOptions.children].forEach(b => b.disabled = true);
-
+    function selectAnswer(idx,btn){
+      [...elOptions.children].forEach(b=>b.disabled=true);
       clearInterval(timer);
-      const q = questions[current];
-      const used = TIEMPO_PREGUNTA - timeLeft;
-      totalTimeUsed += used;
-
-      if(idx === q.a){
-        score += 100 + (timeLeft * 5);
-      }
-      // breve delay para feedback visual si quisieras
-      setTimeout(nextQuestion, 200);
+      const q=questions[current];
+      const used=TIEMPO_PREGUNTA-timeLeft;
+      totalTimeUsed+=used;
+      showCorrectModal(idx);
     }
 
-    function nextQuestion(){
+    function showCorrectModal(selected){
+      const q = questions[current];
+      const correctOption = q.options[q.a];
+      let message = (selected===q.a)?"✅ Correcto!":`❌ Incorrecto. La respuesta correcta era: ${correctOption}`;
+      if(selected===q.a) score += 100 + (timeLeft*5);
+      document.getElementById("answerText").textContent=message;
+      document.getElementById("answerModal").style.display="block";
+    }
+
+    function nextQuestionModal(){
+      document.getElementById("answerModal").style.display="none";
       current++;
-      if(current < questions.length){
+      if(current<questions.length){
         renderQuestion();
         startTimer();
-      } else {
-        endQuiz();
-      }
+      } else endQuiz();
     }
 
     async function endQuiz(){
       elGame.classList.add("hidden");
       elResult.classList.remove("hidden");
-      elFinalScore.textContent = score;
-      elFinalTime.textContent = `${totalTimeUsed}s`;
-
-      // Guardar en tabla global
+      elFinalScore.textContent=score;
+      elFinalTime.textContent=`${totalTimeUsed}s`;
       try{
         await fetch(`${SCRIPT_URL}?action=add&nombre=${encodeURIComponent(playerName)}&puntaje=${encodeURIComponent(score)}&tiempo=${encodeURIComponent(totalTimeUsed)}`);
-      }catch(e){
-        console.error(e);
-        alert("⚠️ No se pudo guardar el puntaje en la tabla global. Probá de nuevo más tarde.");
-      }
-
-      // refrescar leaderboard si está visible
-      if(!elLBWrap.classList.contains("hidden")){
-        await loadLeaderboard();
-      }
+      }catch(e){ console.error(e); alert("No se pudo guardar el puntaje."); }
+      if(!elLBWrap.classList.contains("hidden")) await loadLeaderboard();
     }
 
-    // ====== LEADERBOARD GLOBAL (Apps Script) ======
     async function loadLeaderboard(){
-      elLBTbody.innerHTML = `<tr><td colspan="5" class="muted">Cargando…</td></tr>`;
+      elLBTbody.innerHTML=`<tr><td colspan="5" class="muted">Cargando…</td></tr>`;
       try{
-        const res = await fetch(`${SCRIPT_URL}?action=get`);
-        const rows = await res.json(); // se espera array de arrays
-        // Primera fila: encabezados. Luego: [Nombre, Puntaje, Tiempo, Fecha]
-        const data = (rows || []).slice(1).filter(r => r && r.length);
-        // Ordenar por puntaje desc, y a igualdad por tiempo asc
-        data.sort((a,b) => (Number(b[1]||0) - Number(a[1]||0)) || (Number(a[2]||0) - Number(b[2]||0)));
-
-        if(data.length === 0){
-          elLBTbody.innerHTML = `<tr><td colspan="5" class="muted">No hay registros aún.</td></tr>`;
-          return;
-        }
-
-        elLBTbody.innerHTML = "";
-        data.forEach((r, i) => {
-          const tr = document.createElement("tr");
-          const fecha = r[3] ? formatDate(r[3]) : "-";
-          tr.innerHTML = `
-            <td>${i+1}</td>
-            <td>${escapeHtml(r[0] ?? "—")}</td>
-            <td>${Number(r[1]||0)}</td>
-            <td>${Number(r[2]||0)}</td>
-            <td>${fecha}</td>
-          `;
+        const res=await fetch(`${SCRIPT_URL}?action=get`);
+        const rows=(await res.json()).slice(1).filter(r=>r&&r.length);
+        rows.sort((a,b)=> (Number(b[1]||0)-Number(a[1]||0)) || (Number(a[2]||0)-Number(b[2]||0)));
+        const top20=rows.slice(0,20);
+        if(top20.length===0){ elLBTbody.innerHTML=`<tr><td colspan="5" class="muted">No hay registros aún.</td></tr>`; return; }
+        elLBTbody.innerHTML="";
+        top20.forEach((r,i)=>{
+          const tr=document.createElement("tr");
+          const fecha=r[3]||"-";
+          tr.innerHTML=`<td>${i+1}</td><td>${r[0]||"—"}</td><td>${Number(r[1]||0)}</td><td>${Number(r[2]||0)}</td><td>${fecha}</td>`;
           elLBTbody.appendChild(tr);
         });
-      }catch(e){
-        console.error(e);
-        elLBTbody.innerHTML = `<tr><td colspan="5" class="muted">Error al cargar la tabla.</td></tr>`;
-      }
+      }catch(e){ console.error(e); elLBTbody.innerHTML=`<tr><td colspan="5" class="muted">Error al cargar tabla.</td></tr>`; }
     }
 
-    function formatDate(v){
-      // Apps Script suele devolver fecha como string; mostramos tal cual o intentamos formatear simple.
-      const d = new Date(v);
-      if(!isNaN(d.getTime())){
-        const dd = String(d.getDate()).padStart(2,"0");
-        const mm = String(d.getMonth()+1).padStart(2,"0");
-        const yyyy = d.getFullYear();
-        const hh = String(d.getHours()).padStart(2,"0");
-        const mi = String(d.getMinutes()).padStart(2,"0");
-        return `${dd}/${mm}/${yyyy} ${hh}:${mi}`;
-      }
-      return String(v);
-    }
-
-    function escapeHtml(str){
-      return String(str).replace(/[&<>"']/g, s => ({
-        "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
-      }[s]));
-    }
-
-    // ====== BOTONES SUPERIORES ======
-    document.getElementById("btnToggleLB").addEventListener("click", async () => {
+    // -------- Botones --------
+    document.getElementById("btnToggleLB").onclick=()=>{
       elLBWrap.classList.toggle("hidden");
-      if(!elLBWrap.classList.contains("hidden")){
-        await loadLeaderboard();
-      }
-    });
-
-    document.getElementById("btnEstatuto").addEventListener("click", () => {
-      window.open("https://drive.google.com/file/d/1ct0y2Phs9b45tcL2kLm8Cl6fA6dw8Y_F/view?usp=sharing", "_blank", "noopener");
-    });
-
-    document.getElementById("btnClear").addEventListener("click", async () => {
-      const clave = prompt("Ingrese la clave para limpiar la tabla:");
-      if(!clave) return;
-      try{
-        const res = await fetch(`${SCRIPT_URL}?action=clear&clave=${encodeURIComponent(clave)}`);
-        const text = await res.text();
-        alert(text);
-        if(!elLBWrap.classList.contains("hidden")){
-          await loadLeaderboard();
-        }
-      }catch(e){
-        console.error(e);
-        alert("Error al limpiar la tabla.");
-      }
-    });
-
-    document.getElementById("btnReplay").addEventListener("click", () => {
-      startQuiz();
-    });
+      if(!elLBWrap.classList.contains("hidden")) loadLeaderboard();
+    }
+    document.getElementById("btnEstatuto").onclick=()=>window.open("https://drive.google.com/file/d/1ct0y2Phs9b45tcL2kLm8Cl6fA6dw8Y_F/view?usp=sharing","_blank");
+    document.getElementById("btnClear").onclick=()=>{
+      const clave=prompt("Ingrese clave para limpiar tabla:");
+      if(clave==="NestorVive#1982") fetch(`${SCRIPT_URL}?action=clear`).then(()=>loadLeaderboard());
+      else alert("Clave incorrecta");
+    }
+    document.getElementById("btnReplay").onclick=startQuiz;
   </script>
 </body>
 </html>
