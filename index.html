@@ -6,7 +6,8 @@
   <title>Quiz Estatuto Docente — Cap. XII: Del Ingreso</title>
   <style>
     :root{
-      --azul:#24496e; --violeta:#4d3069; --celeste:#3d8fb0; --beige:#f3efdc; --rojo:#da6863; --ok:#2e7d32; --bad:#c62828;
+      --azul:#24496e; --violeta:#4d3069; --celeste:#3d8fb0; --beige:#f3efdc; --rojo:#da6863;
+      --ok:#2e7d32; --bad:#c62828;
     }
     *{box-sizing:border-box}
     body{
@@ -16,7 +17,7 @@
     }
     .app{
       width:92%; max-width:560px; background:#fff; border-radius:20px;
-      box-shadow:0 10px 30px rgba(0,0,0,.15); padding:18px 16px 72px; /* extra bottom space for sticky bar */
+      box-shadow:0 10px 30px rgba(0,0,0,.15); padding:18px 16px 82px; /* extra bottom space for sticky bar */
       position:relative;
     }
     header{ text-align:center; margin-bottom:8px;}
@@ -25,9 +26,9 @@
 
     .timer{ margin:10px 0 6px; font-weight:700; color:var(--rojo); text-align:center; }
 
-    /* Barra de agotamiento (de verde a rojo) */
+    /* Barra de agotamiento con color dinámico (verde → rojo) */
     .exhaust{ height:12px; background:#e9edf0; border-radius:999px; overflow:hidden; box-shadow:inset 0 1px 2px rgba(0,0,0,.08); margin:0 0 12px; }
-    .exhaust .bar{ height:100%; width:100%; background:hsl(120,70%,45%); transition:width .3s ease, background-color .3s ease; }
+    .exhaust .bar{ height:100%; width:100%; border-radius:999px; transition:width .08s linear; }
 
     /* Mejor contraste para la pregunta */
     .question{
@@ -56,6 +57,7 @@
 
     .result h2{ margin:0 0 6px; color:var(--violeta); }
     .result p{ margin:6px 0; }
+    .pill{ display:inline-block; padding:2px 8px; border-radius:999px; background:#eef4f8; color:#274b6d; font-size:.8rem; }
 
     .leaderboard{
       margin-top:14px; background:#fff; border:1px solid #e8e6de; border-radius:14px; overflow:hidden;
@@ -67,19 +69,18 @@
     tbody td{
       border-top:1px solid #eee; padding:9px; font-size:.95rem; text-align:center; color:#1d2a38;
     }
-    .pill{ display:inline-block; padding:2px 8px; border-radius:999px; background:#eef4f8; color:#274b6d; font-size:.8rem; }
 
     /* Barra inferior fija dentro de la tarjeta */
     .bottombar{
       position:sticky; bottom:0; left:0; right:0; background:linear-gradient(to top, #ffffff, rgba(255,255,255,.75));
-      padding:10px 0 6px; backdrop-filter:saturate(1.1) blur(2px);
+      padding:12px 0 8px; backdrop-filter:saturate(1.1) blur(2px);
     }
     .bottombar .wrap{
       display:grid; gap:8px; grid-template-columns: 1fr 1fr; padding:0 2px;
     }
     @media (min-width:520px){ .bottombar .wrap{ grid-template-columns: 1fr 1fr 1fr; } }
 
-    /* MODAL para respuesta correcta/incorrecta */
+    /* MODAL resultado */
     .modal-backdrop{
       position:fixed; inset:0; background:rgba(0,0,0,.35); display:none; align-items:center; justify-content:center; padding:18px;
     }
@@ -165,7 +166,7 @@
   <script>
     // ====== CONFIG ======
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwX8whu7tz-FnGiZ0Eo9rzOJZKjxF3fQQWpaTXpV98vDG0mIDsg0Ygca_WyEiRYcSOG/exec";
-    const TIEMPO_PREGUNTA = 20;
+    const TIEMPO_PREGUNTA_MS = 20000; // 20s en milisegundos
 
     // ====== PREGUNTAS ======
     const questions = [
@@ -229,10 +230,11 @@
     // ====== ESTADO DE JUEGO ======
     let current = 0;
     let score = 0;
-    let timer = null;
-    let timeLeft = TIEMPO_PREGUNTA;
-    let totalTimeUsed = 0;
-    let playerName = null; // ahora se pide al final
+    let rafId = null;
+    let timeStart = 0; // timestamp de inicio de pregunta
+    let elapsed = 0;   // ms transcurridos en la pregunta actual
+    let totalTimeUsed = 0; // en segundos (redondeamos)
+    let playerName = null; // se pide al final
     let correctCount = 0;
 
     // ====== NODOS ======
@@ -255,20 +257,16 @@
     const elBtnNext = document.getElementById("btnNext");
     const elExhaust = document.getElementById("exhaustBar");
 
-    // ====== INICIO ======
+    // ====== ARRANQUE ======
     startQuiz();
 
     function startQuiz(){
-      score = 0;
-      current = 0;
-      totalTimeUsed = 0;
-      correctCount = 0;
-      playerName = null; // se pedirá al final
+      score = 0; current = 0; totalTimeUsed = 0; correctCount = 0; playerName = null;
       elResult.classList.add("hidden");
       elLBWrap.classList.add("hidden");
       elGame.classList.remove("hidden");
       renderQuestion();
-      startTimer();
+      beginTimer();
     }
 
     function renderQuestion(){
@@ -279,42 +277,44 @@
         const btn = document.createElement("button");
         btn.className = "btn";
         btn.textContent = opt;
-        btn.onclick = () => selectAnswer(i, btn);
+        btn.onclick = () => selectAnswer(i);
         elOptions.appendChild(btn);
       });
-      timeLeft = TIEMPO_PREGUNTA;
-      elTimer.textContent = timeLeft;
+      elapsed = 0;
+      elTimer.textContent = Math.ceil((TIEMPO_PREGUNTA_MS - elapsed)/1000);
       elProgress.textContent = `Pregunta ${current+1} de ${questions.length}`;
-      updateExhaust();
+      updateExhaust(1); // barra llena al inicio
     }
 
-    function startTimer(){
-      clearInterval(timer);
-      timer = setInterval(() => {
-        timeLeft--;
-        if(timeLeft < 0) timeLeft = 0;
-        elTimer.textContent = timeLeft;
-        updateExhaust();
-        if(timeLeft <= 0){
-          clearInterval(timer);
-          totalTimeUsed += TIEMPO_PREGUNTA; // agotó el tiempo
-          showAnswerModal(false); // tiempo agotado => incorrecta
+    function beginTimer(){
+      cancelAnimationFrame(rafId);
+      timeStart = performance.now();
+      const loop = (now) => {
+        elapsed = now - timeStart;
+        const remaining = Math.max(0, TIEMPO_PREGUNTA_MS - elapsed);
+        elTimer.textContent = Math.ceil(remaining/1000);
+        updateExhaust(remaining / TIEMPO_PREGUNTA_MS);
+        if(remaining <= 0){
+          totalTimeUsed += Math.round(TIEMPO_PREGUNTA_MS/1000);
+          showAnswerModal(false);
+          return; // detener el loop hasta siguiente pregunta
         }
-      }, 1000);
+        rafId = requestAnimationFrame(loop);
+      };
+      rafId = requestAnimationFrame(loop);
     }
 
     function selectAnswer(idx){
-      // desactivar para evitar doble click
-      [...elOptions.children].forEach(b => b.disabled = true);
-
-      clearInterval(timer);
+      cancelAnimationFrame(rafId);
       const q = questions[current];
-      const used = TIEMPO_PREGUNTA - timeLeft;
-      totalTimeUsed += used;
+      const remaining = Math.max(0, TIEMPO_PREGUNTA_MS - elapsed);
+      const used = (TIEMPO_PREGUNTA_MS - remaining) / 1000; // en s
+      totalTimeUsed += Math.round(used);
 
       const isCorrect = (idx === q.a);
       if(isCorrect){
-        score += 100 + (timeLeft * 5);
+        const bonus = Math.round((remaining/1000) * 5);
+        score += 100 + bonus;
         correctCount++;
       }
       showAnswerModal(isCorrect);
@@ -331,7 +331,6 @@
       elBtnNext.textContent = current < questions.length - 1 ? "Siguiente pregunta ▶️" : "Finalizar ✅";
 
       elModalBackdrop.classList.add("show");
-
       elBtnNext.onclick = () => {
         elModalBackdrop.classList.remove("show");
         nextQuestionOrFinish();
@@ -342,14 +341,14 @@
       current++;
       if(current < questions.length){
         renderQuestion();
-        startTimer();
+        beginTimer();
       } else {
         endQuiz();
       }
     }
 
     async function endQuiz(){
-      // Pedir nombre al final de la última respuesta
+      // Pedir nombre al final
       if(!playerName){
         playerName = prompt("Ingresá tu nombre para guardar tu puntaje:") || "Anónimo";
       }
@@ -361,7 +360,7 @@
       elFinalCorrect.textContent = correctCount;
       elFinalTotal.textContent = questions.length;
 
-      // Guardar en tabla global
+      // Guardar en planilla
       try{
         await fetch(`${SCRIPT_URL}?action=add&nombre=${encodeURIComponent(playerName)}&puntaje=${encodeURIComponent(score)}&tiempo=${encodeURIComponent(totalTimeUsed)}`);
       }catch(e){
@@ -369,7 +368,7 @@
         alert("⚠️ No se pudo guardar el puntaje en la tabla global. Probá de nuevo más tarde.");
       }
 
-      // Mostrar la tabla de posiciones por defecto al terminar
+      // Mostrar TOP 15 por defecto
       elLBWrap.classList.remove("hidden");
       await loadLeaderboard();
     }
@@ -379,17 +378,13 @@
       elLBTbody.innerHTML = `<tr><td colspan="5" class="muted">Cargando…</td></tr>`;
       try{
         const res = await fetch(`${SCRIPT_URL}?action=get`);
-        const rows = await res.json(); // se espera array de arrays
-        // Primera fila: encabezados. Luego: [Nombre, Puntaje, Tiempo, Fecha]
+        const rows = await res.json();
         const data = (rows || []).slice(1).filter(r => r && r.length);
-        // Ordenar por puntaje desc, y a igualdad por tiempo asc
         data.sort((a,b) => (Number(b[1]||0) - Number(a[1]||0)) || (Number(a[2]||0) - Number(b[2]||0)));
-
         if(data.length === 0){
           elLBTbody.innerHTML = `<tr><td colspan="5" class="muted">No hay registros aún.</td></tr>`;
           return;
         }
-
         elLBTbody.innerHTML = "";
         data.slice(0,15).forEach((r, i) => { // TOP 15
           const tr = document.createElement("tr");
@@ -456,18 +451,15 @@
       }
     });
 
-    document.getElementById("btnReplay").addEventListener("click", () => {
-      startQuiz();
-    });
-
-    // ====== Exhaust helpers ======
-    function updateExhaust(){
-      const frac = Math.max(0, Math.min(1, timeLeft / TIEMPO_PREGUNTA));
-      const hue = Math.round(120 * frac); // 120=verde, 0=rojo
-      const pct = Math.max(2, Math.round(frac * 100)); // nunca 0 para que se vea
+    // ====== BARRA DINÁMICA ======
+    function updateExhaust(frac){
+      const f = Math.max(0, Math.min(1, frac));
+      const hue = Math.round(120 * f); // 120=verde → 0=rojo
+      const hue2 = Math.max(0, hue - 25);
+      const pct = Math.max(2, Math.round(f*100)); // nunca 0 para que no desaparezca
       if(elExhaust){
         elExhaust.style.width = pct + "%";
-        elExhaust.style.background = `hsl(${hue}, 70%, 45%)`;
+        elExhaust.style.background = `linear-gradient(90deg, hsl(${hue}, 70%, 45%), hsl(${hue2}, 70%, 55%))`;
       }
     }
   </script>
