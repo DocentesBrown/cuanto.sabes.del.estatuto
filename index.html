@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Quiz Estatuto Docente - Capítulo XII</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f3efdc;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+    }
+    .quiz-container {
+      background: white;
+      padding: 20px;
+      border-radius: 20px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+      width: 95%;
+      max-width: 500px;
+      text-align: center;
+    }
+    h1 { color: #24496e; font-size: 1.5rem; }
+    p { color: #4d3069; }
+    .question { font-size: 18px; margin: 15px 0; }
+    .options button {
+      display: block;
+      width: 100%;
+      margin: 8px 0;
+      padding: 12px;
+      background: #3d8fb0;
+      color: white;
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      font-size: 1rem;
+      transition: background 0.2s;
+    }
+    .options button:hover { background: #24496e; }
+    .hidden { display: none; }
+    .timer {
+      font-weight: bold;
+      margin: 12px 0;
+      color: #da6863;
+    }
+    .score-board {
+      margin-top: 15px;
+      text-align: left;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.9rem;
+    }
+    th, td {
+      border: 1px solid #ccc;
+      padding: 6px;
+      text-align: center;
+    }
+    th { background: #4d3069; color: white; }
+    .btn {
+      margin-top: 12px;
+      padding: 12px;
+      border: none;
+      border-radius: 10px;
+      font-size: 1rem;
+      cursor: pointer;
+      width: 100%;
+    }
+    .btn-secondary {
+      background: #da6863;
+      color: white;
+    }
+    .btn-secondary:hover { background: #a53f3c; }
+    .btn-download {
+      background: #24496e;
+      color: white;
+    }
+    .btn-download:hover { background: #162c45; }
+    @media (max-width: 480px) {
+      h1 { font-size: 1.2rem; }
+      .question { font-size: 16px; }
+      .btn, .options button { font-size: 0.9rem; padding: 10px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="quiz-container">
+    <h1>Quiz: Estatuto Docente</h1>
+    <p><b>Capítulo XII: Del Ingreso</b></p>
+
+    <!-- Bloque del juego -->
+    <div id="quiz">
+      <div id="question-container"></div>
+      <div class="options" id="options"></div>
+      <div class="timer">⏳ Tiempo restante: <span id="timer">20</span>s</div>
+    </div>
+
+    <!-- Bloque de resultado final -->
+    <div id="result" class="hidden">
+      <h2>¡Juego terminado!</h2>
+      <p>Puntaje obtenido: <span id="final-score"></span></p>
+      <button class="btn btn-download" onclick="location.reload()">🔄 Volver a jugar</button>
+    </div>
+
+    <!-- Botón para ver ranking -->
+    <button class="btn btn-secondary" onclick="toggleLeaderboard()">📊 Ver tabla de posiciones</button>
+
+    <!-- Botón para descargar Estatuto -->
+    <a href="https://drive.google.com/file/d/1ct0y2Phs9b45tcL2kLm8Cl6fA6dw8Y_F/view?usp=sharing" target="_blank">
+      <button class="btn btn-download">📕 Descargar Estatuto Docente</button>
+    </a>
+
+    <!-- Tabla de posiciones -->
+    <div id="leaderboard-section" class="hidden">
+      <h3>Tabla de posiciones</h3>
+      <div class="score-board">
+        <table>
+          <thead>
+            <tr><th>Jugador</th><th>Puntaje</th></tr>
+          </thead>
+          <tbody id="leaderboard"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const questions = [
+      {
+        question: "¿Qué establece el Capítulo XII sobre el ingreso a la docencia?",
+        options: [
+          "Que es por orden de mérito en listados oficiales",
+          "Que se accede por recomendación",
+          "Que se sortean los cargos",
+          "Que se elige por votación en la escuela"
+        ],
+        answer: 0
+      },
+      {
+        question: "¿Qué organismo confecciona los listados para el ingreso?",
+        options: [
+          "El Ministerio de Educación",
+          "El Consejo Escolar",
+          "La Dirección General de Cultura y Educación",
+          "Los gremios docentes"
+        ],
+        answer: 2
+      },
+      {
+        question: "¿Qué se valora principalmente para establecer el orden de mérito?",
+        options: [
+          "La antigüedad docente",
+          "El puntaje del escalafón",
+          "La cantidad de títulos",
+          "La entrevista personal"
+        ],
+        answer: 1
+      },
+      {
+        question: "¿Cada cuánto tiempo se renuevan los listados de ingreso?",
+        options: [
+          "Anualmente",
+          "Cada 3 años",
+          "Cada 5 años",
+          "Cuando lo decide la escuela"
+        ],
+        answer: 0
+      },
+      {
+        question: "¿Qué requisito básico debe cumplir un aspirante para figurar en el listado?",
+        options: [
+          "Presentar aval gremial",
+          "Tener título habilitante",
+          "Haber trabajado previamente",
+          "Tener recomendación de un directivo"
+        ],
+        answer: 1
+      }
+    ];
+
+    let currentQuestion = 0;
+    let score = 0;
+    let timer;
+    let timeLeft = 20;
+    let leaderboard = JSON.parse(localStorage.getItem("leaderboard")) || [];
+
+    const questionContainer = document.getElementById("question-container");
+    const optionsContainer = document.getElementById("options");
+    const timerDisplay = document.getElementById("timer");
+    const resultDiv = document.getElementById("result");
+    const quizDiv = document.getElementById("quiz");
+    const finalScore = document.getElementById("final-score");
+    const leaderboardTable = document.getElementById("leaderboard");
+    const leaderboardSection = document.getElementById("leaderboard-section");
+
+    function startQuiz() {
+      showQuestion();
+      startTimer();
+    }
+
+    function showQuestion() {
+      let q = questions[currentQuestion];
+      questionContainer.textContent = q.question;
+      optionsContainer.innerHTML = "";
+      q.options.forEach((opt, i) => {
+        let btn = document.createElement("button");
+        btn.textContent = opt;
+        btn.onclick = () => selectAnswer(i);
+        optionsContainer.appendChild(btn);
+      });
+      timeLeft = 20;
+      timerDisplay.textContent = timeLeft;
+    }
+
+    function startTimer() {
+      timer = setInterval(() => {
+        timeLeft--;
+        timerDisplay.textContent = timeLeft;
+        if (timeLeft <= 0) {
+          clearInterval(timer);
+          nextQuestion();
+        }
+      }, 1000);
+    }
+
+    function selectAnswer(i) {
+      clearInterval(timer);
+      if (i === questions[currentQuestion].answer) {
+        score += 100 + timeLeft * 5; // puntaje base + bonus por rapidez
+      }
+      nextQuestion();
+    }
+
+    function nextQuestion() {
+      currentQuestion++;
+      if (currentQuestion < questions.length) {
+        showQuestion();
+        startTimer();
+      } else {
+        endQuiz();
+      }
+    }
+
+    function endQuiz() {
+      quizDiv.classList.add("hidden");
+      resultDiv.classList.remove("hidden");
+      finalScore.textContent = score;
+
+      let playerName = prompt("Ingresá tu nombre para la tabla de posiciones:") || "Anónimo";
+      leaderboard.push({ name: playerName, score: score });
+      leaderboard.sort((a,b) => b.score - a.score);
+      localStorage.setItem("leaderboard", JSON.stringify(leaderboard));
+
+      updateLeaderboard();
+    }
+
+    function updateLeaderboard() {
+      leaderboardTable.innerHTML = "";
+      leaderboard.forEach(p => {
+        let row = `<tr><td>${p.name}</td><td>${p.score}</td></tr>`;
+        leaderboardTable.innerHTML += row;
+      });
+    }
+
+    function toggleLeaderboard() {
+      updateLeaderboard();
+      leaderboardSection.classList.toggle("hidden");
+    }
+
+    startQuiz();
+  </script>
+</body>
+</html>
