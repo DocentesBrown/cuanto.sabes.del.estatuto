@@ -6,8 +6,7 @@
   <title>Quiz Estatuto Docente — Cap. XII: Del Ingreso</title>
   <style>
     :root{
-      --azul:#24496e; --violeta:#4d3069; --celeste:#3d8fb0; --beige:#f3efdc; --rojo:#da6863;
-      --ok:#2e7d32; --bad:#c62828;
+      --azul:#24496e; --violeta:#4d3069; --celeste:#3d8fb0; --beige:#f3efdc; --rojo:#da6863; --ok:#2e7d32; --bad:#c62828;
     }
     *{box-sizing:border-box}
     body{
@@ -17,7 +16,7 @@
     }
     .app{
       width:92%; max-width:560px; background:#fff; border-radius:20px;
-      box-shadow:0 10px 30px rgba(0,0,0,.15); padding:18px 16px 82px; /* extra bottom space for sticky bar */
+      box-shadow:0 10px 30px rgba(0,0,0,.15); padding:18px 16px 90px; /* espacio para la barra inferior */
       position:relative;
     }
     header{ text-align:center; margin-bottom:8px;}
@@ -59,40 +58,26 @@
     .result p{ margin:6px 0; }
     .pill{ display:inline-block; padding:2px 8px; border-radius:999px; background:#eef4f8; color:#274b6d; font-size:.8rem; }
 
-    .leaderboard{
-      margin-top:14px; background:#fff; border:1px solid #e8e6de; border-radius:14px; overflow:hidden;
-    }
+    .leaderboard{ margin-top:14px; background:#fff; border:1px solid #e8e6de; border-radius:14px; overflow:hidden; }
     table{ width:100%; border-collapse:collapse; }
-    thead th{
-      background:var(--violeta); color:#fff; padding:10px; font-weight:700; font-size:.95rem; text-align:center;
-    }
-    tbody td{
-      border-top:1px solid #eee; padding:9px; font-size:.95rem; text-align:center; color:#1d2a38;
-    }
+    thead th{ background:var(--violeta); color:#fff; padding:10px; font-weight:700; font-size:.95rem; text-align:center; }
+    tbody td{ border-top:1px solid #eee; padding:9px; font-size:.95rem; text-align:center; color:#1d2a38; }
 
     /* Barra inferior fija dentro de la tarjeta */
-    .bottombar{
-      position:sticky; bottom:0; left:0; right:0; background:linear-gradient(to top, #ffffff, rgba(255,255,255,.75));
-      padding:12px 0 8px; backdrop-filter:saturate(1.1) blur(2px);
-    }
-    .bottombar .wrap{
-      display:grid; gap:8px; grid-template-columns: 1fr 1fr; padding:0 2px;
-    }
+    .bottombar{ position:sticky; bottom:0; left:0; right:0; background:linear-gradient(to top, #ffffff, rgba(255,255,255,.75)); padding:12px 0 8px; backdrop-filter:saturate(1.1) blur(2px); }
+    .bottombar .wrap{ display:grid; gap:8px; grid-template-columns: 1fr 1fr; padding:0 2px; }
     @media (min-width:520px){ .bottombar .wrap{ grid-template-columns: 1fr 1fr 1fr; } }
 
-    /* MODAL resultado */
-    .modal-backdrop{
-      position:fixed; inset:0; background:rgba(0,0,0,.35); display:none; align-items:center; justify-content:center; padding:18px;
-    }
+    /* MODALES */
+    .modal-backdrop{ position:fixed; inset:0; background:rgba(0,0,0,.35); display:none; align-items:center; justify-content:center; padding:18px; }
     .modal-backdrop.show{ display:flex; }
-    .modal{
-      width:100%; max-width:520px; background:var(--beige); color:var(--azul); border-radius:18px; padding:18px 16px;
-      box-shadow:0 12px 30px rgba(0,0,0,.25);
-    }
+    .modal{ width:100%; max-width:520px; background:var(--beige); color:var(--azul); border-radius:18px; padding:18px 16px; box-shadow:0 12px 30px rgba(0,0,0,.25); }
     .modal h3{ margin:0 0 8px; font-size:1.15rem; }
     .modal h3.ok{ color:var(--ok); }
     .modal h3.bad{ color:var(--bad); }
     .modal p{ margin:0 0 12px; }
+    .spinner{ width:28px; height:28px; border-radius:50%; border:3px solid rgba(0,0,0,.1); border-top-color:var(--violeta); animation:spin .8s linear infinite; margin:0 auto 10px; }
+    @keyframes spin{ to{ transform:rotate(360deg);} }
   </style>
 </head>
 <body>
@@ -104,7 +89,7 @@
 
     <!-- Game -->
     <div id="game">
-      <div class="timer">⏳ Tiempo restante: <span id="timer">20</span>s</div>
+      <div class="timer">⏳ Tiempo restante: <span id="timer">60</span>s</div>
       <div class="exhaust"><div class="bar" id="exhaustBar"></div></div>
       <div class="question" id="question"></div>
       <div class="options" id="options"></div>
@@ -117,9 +102,7 @@
       <p>Puntaje obtenido: <span id="finalScore" class="pill">0</span></p>
       <p>Tiempo total usado: <span id="finalTime" class="pill">0s</span></p>
       <p>Respuestas correctas: <span id="finalCorrect" class="pill">0</span>/<span id="finalTotal" class="pill">0</span></p>
-      <div class="btn-row">
-        <button class="btn dark" id="btnReplay">🔄 Volver a jugar</button>
-      </div>
+      <!-- Sin botón de volver a jugar -->
     </div>
 
     <!-- Leaderboard -->
@@ -140,7 +123,7 @@
       </table>
     </div>
 
-    <p class="muted">Puntaje: 100 por acierto + 5 por cada segundo ahorrado.</p>
+    <p class="muted">Puntaje: 100 por acierto + 1 por cada segundo ahorrado.</p>
 
     <!-- Barra inferior con acciones (abajo) -->
     <div class="bottombar">
@@ -152,7 +135,7 @@
     </div>
   </div>
 
-  <!-- MODAL -->
+  <!-- MODAL de respuesta -->
   <div id="modalBackdrop" class="modal-backdrop" role="dialog" aria-modal="true">
     <div class="modal">
       <h3 id="modalTitle">Respuesta</h3>
@@ -163,68 +146,28 @@
     </div>
   </div>
 
+  <!-- MODAL de espera final -->
+  <div id="waitBackdrop" class="modal-backdrop" role="alertdialog" aria-live="polite">
+    <div class="modal" style="text-align:center">
+      <div class="spinner"></div>
+      <h3>Por favor, espere…</h3>
+      <p>Mostrando la tabla de posiciones en un instante.</p>
+    </div>
+  </div>
+
   <script>
     // ====== CONFIG ======
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwX8whu7tz-FnGiZ0Eo9rzOJZKjxF3fQQWpaTXpV98vDG0mIDsg0Ygca_WyEiRYcSOG/exec";
-    const TIEMPO_PREGUNTA_MS = 20000; // 20s en milisegundos
+    const TIEMPO_PREGUNTA_MS = 60000; // 60s en milisegundos
 
     // ====== PREGUNTAS ======
     const questions = [
-      {
-        q: "¿Cómo se realiza el ingreso a la docencia según el Cap. XII?",
-        options: [
-          "Por orden de mérito en listados oficiales",
-          "Por recomendación de directivos",
-          "Por sorteo de cargos",
-          "Por votación en la escuela"
-        ],
-        a: 0
-      },
-      {
-        q: "¿Qué organismo confecciona y aprueba los listados de aspirantes?",
-        options: [
-          "Consejo Escolar",
-          "Dirección General de Cultura y Educación",
-          "Sindicatos Docentes",
-          "Jefatura Distrital"
-        ],
-        a: 1
-      },
-      {
-        q: "Requisito básico para figurar en los listados de ingreso:",
-        options: [
-          "Antigüedad docente comprobable",
-          "Tener título habilitante",
-          "Experiencia previa mínima",
-          "Recomendación gremial"
-        ],
-        a: 1
-      },
-      {
-        q: "Periodicidad de inscripción y actualización de listados:",
-        options: ["Anual", "Cada 3 años", "Cada 5 años", "A demanda de cada escuela"],
-        a: 0
-      },
-      {
-        q: "Criterio principal para ordenar a los aspirantes:",
-        options: [
-          "Edad del aspirante",
-          "Fecha de inscripción",
-          "Puntaje del escalafón (antecedentes y títulos)",
-          "Entrevista personal"
-        ],
-        a: 2
-      },
-      {
-        q: "¿Cómo se otorgan los cargos a los aspirantes?",
-        options: [
-          "En acto público según orden de mérito",
-          "Por decisión del director",
-          "Por concurso de antecedentes y oposición en cada escuela",
-          "Por inscripción espontánea el día del inicio"
-        ],
-        a: 0
-      }
+      { q: "¿Cómo se realiza el ingreso a la docencia según el Cap. XII?", options: ["Por orden de mérito en listados oficiales","Por recomendación de directivos","Por sorteo de cargos","Por votación en la escuela"], a: 0 },
+      { q: "¿Qué organismo confecciona y aprueba los listados de aspirantes?", options: ["Consejo Escolar","Dirección General de Cultura y Educación","Sindicatos Docentes","Jefatura Distrital"], a: 1 },
+      { q: "Requisito básico para figurar en los listados de ingreso:", options: ["Antigüedad docente comprobable","Tener título habilitante","Experiencia previa mínima","Recomendación gremial"], a: 1 },
+      { q: "Periodicidad de inscripción y actualización de listados:", options: ["Anual","Cada 3 años","Cada 5 años","A demanda de cada escuela"], a: 0 },
+      { q: "Criterio principal para ordenar a los aspirantes:", options: ["Edad del aspirante","Fecha de inscripción","Puntaje del escalafón (antecedentes y títulos)","Entrevista personal"], a: 2 },
+      { q: "¿Cómo se otorgan los cargos a los aspirantes?", options: ["En acto público según orden de mérito","Por decisión del director","Por concurso de antecedentes y oposición en cada escuela","Por inscripción espontánea el día del inicio"], a: 0 }
     ];
 
     // ====== ESTADO DE JUEGO ======
@@ -233,7 +176,7 @@
     let rafId = null;
     let timeStart = 0; // timestamp de inicio de pregunta
     let elapsed = 0;   // ms transcurridos en la pregunta actual
-    let totalTimeUsed = 0; // en segundos (redondeamos)
+    let totalTimeUsed = 0; // en segundos redondeados
     let playerName = null; // se pide al final
     let correctCount = 0;
 
@@ -255,16 +198,20 @@
     const elModalContent = document.getElementById("modalContent");
     const elModalTitle = document.getElementById("modalTitle");
     const elBtnNext = document.getElementById("btnNext");
+
     const elExhaust = document.getElementById("exhaustBar");
+    const elWait = document.getElementById("waitBackdrop");
 
     // ====== ARRANQUE ======
     startQuiz();
 
     function startQuiz(){
+      cancelAnimationFrame(rafId);
       score = 0; current = 0; totalTimeUsed = 0; correctCount = 0; playerName = null;
       elResult.classList.add("hidden");
       elLBWrap.classList.add("hidden");
       elGame.classList.remove("hidden");
+      if(elWait) elWait.classList.remove("show");
       renderQuestion();
       beginTimer();
     }
@@ -313,7 +260,7 @@
 
       const isCorrect = (idx === q.a);
       if(isCorrect){
-        const bonus = Math.round((remaining/1000) * 5);
+        const bonus = Math.round((remaining/1000) * 1); // 1 punto por segundo ahorrado
         score += 100 + bonus;
         correctCount++;
       }
@@ -353,6 +300,9 @@
         playerName = prompt("Ingresá tu nombre para guardar tu puntaje:") || "Anónimo";
       }
 
+      // Mostrar ventana de espera mientras se guarda y carga TOP 15
+      if(elWait) elWait.classList.add("show");
+
       elGame.classList.add("hidden");
       elResult.classList.remove("hidden");
       elFinalScore.textContent = score;
@@ -360,29 +310,26 @@
       elFinalCorrect.textContent = correctCount;
       elFinalTotal.textContent = questions.length;
 
-      // Guardar en planilla
       try{
         await fetch(`${SCRIPT_URL}?action=add&nombre=${encodeURIComponent(playerName)}&puntaje=${encodeURIComponent(score)}&tiempo=${encodeURIComponent(totalTimeUsed)}`);
-      }catch(e){
-        console.error(e);
-        alert("⚠️ No se pudo guardar el puntaje en la tabla global. Probá de nuevo más tarde.");
-      }
+      }catch(e){ console.error(e); /* Silenciamos error pero seguimos */ }
 
-      // Mostrar TOP 15 por defecto
       elLBWrap.classList.remove("hidden");
       await loadLeaderboard();
+
+      if(elWait) elWait.classList.remove("show");
     }
 
     // ====== LEADERBOARD GLOBAL (Apps Script) ======
     async function loadLeaderboard(){
-      elLBTbody.innerHTML = `<tr><td colspan="5" class="muted">Cargando…</td></tr>`;
+      elLBTbody.innerHTML = `<tr><td colspan=\"5\" class=\"muted\">Cargando…</td></tr>`;
       try{
         const res = await fetch(`${SCRIPT_URL}?action=get`);
         const rows = await res.json();
         const data = (rows || []).slice(1).filter(r => r && r.length);
         data.sort((a,b) => (Number(b[1]||0) - Number(a[1]||0)) || (Number(a[2]||0) - Number(b[2]||0)));
         if(data.length === 0){
-          elLBTbody.innerHTML = `<tr><td colspan="5" class="muted">No hay registros aún.</td></tr>`;
+          elLBTbody.innerHTML = `<tr><td colspan=\"5\" class=\"muted\">No hay registros aún.</td></tr>`;
           return;
         }
         elLBTbody.innerHTML = "";
@@ -400,7 +347,7 @@
         });
       }catch(e){
         console.error(e);
-        elLBTbody.innerHTML = `<tr><td colspan="5" class="muted">Error al cargar la tabla.</td></tr>`;
+        elLBTbody.innerHTML = `<tr><td colspan=\"5\" class=\"muted\">Error al cargar la tabla.</td></tr>`;
       }
     }
 
@@ -418,9 +365,7 @@
     }
 
     function escapeHtml(str){
-      return String(str).replace(/[&<>"']/g, s => ({
-        "&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"
-      }[s]));
+      return String(str).replace(/[&<>"']/g, s => ({ "&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;" }[s]));
     }
 
     // ====== BOTONES INFERIORES ======
@@ -445,10 +390,7 @@
         if(!elLBWrap.classList.contains("hidden")){
           await loadLeaderboard();
         }
-      }catch(e){
-        console.error(e);
-        alert("Error al limpiar la tabla.");
-      }
+      }catch(e){ console.error(e); alert("Error al limpiar la tabla."); }
     });
 
     // ====== BARRA DINÁMICA ======
