@@ -6,7 +6,7 @@
   <title>Quiz Estatuto Docente — Cap. XII: Del Ingreso</title>
   <style>
     :root{
-      --azul:#24496e; --violeta:#4d3069; --celeste:#3d8fb0; --beige:#f3efdc; --rojo:#da6863;
+      --azul:#24496e; --violeta:#4d3069; --celeste:#3d8fb0; --beige:#f3efdc; --rojo:#da6863; --ok:#2e7d32; --bad:#c62828;
     }
     *{box-sizing:border-box}
     body{
@@ -23,7 +23,11 @@
     header h1{ margin:0; font-size:1.35rem; color:var(--azul); }
     header p{ margin:6px 0 0; color:var(--violeta); font-weight:600; }
 
-    .timer{ margin:10px 0 14px; font-weight:700; color:var(--rojo); text-align:center; }
+    .timer{ margin:10px 0 6px; font-weight:700; color:var(--rojo); text-align:center; }
+
+    /* Barra de agotamiento (de verde a rojo) */
+    .exhaust{ height:12px; background:#e9edf0; border-radius:999px; overflow:hidden; box-shadow:inset 0 1px 2px rgba(0,0,0,.08); margin:0 0 12px; }
+    .exhaust .bar{ height:100%; width:100%; background:hsl(120,70%,45%); transition:width .3s ease, background-color .3s ease; }
 
     /* Mejor contraste para la pregunta */
     .question{
@@ -75,7 +79,7 @@
     }
     @media (min-width:520px){ .bottombar .wrap{ grid-template-columns: 1fr 1fr 1fr; } }
 
-    /* MODAL para respuesta correcta */
+    /* MODAL para respuesta correcta/incorrecta */
     .modal-backdrop{
       position:fixed; inset:0; background:rgba(0,0,0,.35); display:none; align-items:center; justify-content:center; padding:18px;
     }
@@ -84,7 +88,9 @@
       width:100%; max-width:520px; background:var(--beige); color:var(--azul); border-radius:18px; padding:18px 16px;
       box-shadow:0 12px 30px rgba(0,0,0,.25);
     }
-    .modal h3{ margin:0 0 8px; color:var(--violeta); font-size:1.15rem; }
+    .modal h3{ margin:0 0 8px; font-size:1.15rem; }
+    .modal h3.ok{ color:var(--ok); }
+    .modal h3.bad{ color:var(--bad); }
     .modal p{ margin:0 0 12px; }
   </style>
 </head>
@@ -98,6 +104,7 @@
     <!-- Game -->
     <div id="game">
       <div class="timer">⏳ Tiempo restante: <span id="timer">20</span>s</div>
+      <div class="exhaust"><div class="bar" id="exhaustBar"></div></div>
       <div class="question" id="question"></div>
       <div class="options" id="options"></div>
       <p class="muted" id="progress"></p>
@@ -160,7 +167,7 @@
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwX8whu7tz-FnGiZ0Eo9rzOJZKjxF3fQQWpaTXpV98vDG0mIDsg0Ygca_WyEiRYcSOG/exec";
     const TIEMPO_PREGUNTA = 20;
 
-    // ====== PREGUNTAS (6) ======
+    // ====== PREGUNTAS ======
     const questions = [
       {
         q: "¿Cómo se realiza el ingreso a la docencia según el Cap. XII?",
@@ -246,6 +253,7 @@
     const elModalContent = document.getElementById("modalContent");
     const elModalTitle = document.getElementById("modalTitle");
     const elBtnNext = document.getElementById("btnNext");
+    const elExhaust = document.getElementById("exhaustBar");
 
     // ====== INICIO ======
     startQuiz();
@@ -277,13 +285,16 @@
       timeLeft = TIEMPO_PREGUNTA;
       elTimer.textContent = timeLeft;
       elProgress.textContent = `Pregunta ${current+1} de ${questions.length}`;
+      updateExhaust();
     }
 
     function startTimer(){
       clearInterval(timer);
       timer = setInterval(() => {
         timeLeft--;
+        if(timeLeft < 0) timeLeft = 0;
         elTimer.textContent = timeLeft;
+        updateExhaust();
         if(timeLeft <= 0){
           clearInterval(timer);
           totalTimeUsed += TIEMPO_PREGUNTA; // agotó el tiempo
@@ -312,12 +323,14 @@
     function showAnswerModal(isCorrect){
       const q = questions[current];
       const correctText = q.options[q.a];
-      elModalTitle.textContent = isCorrect ? "¡Correcto!" : "Respuesta correcta:";
-      elModalContent.textContent = correctText;
+      elModalTitle.className = isCorrect ? 'ok' : 'bad';
+      elModalTitle.textContent = isCorrect ? "¡Correcto!" : "Incorrecto";
+      elModalContent.innerHTML = isCorrect
+        ? `✅ Tu respuesta es correcta.<br><strong>Opción correcta:</strong> ${escapeHtml(correctText)}`
+        : `❌ Tu respuesta no es correcta.<br><strong>La correcta era:</strong> ${escapeHtml(correctText)}`;
       elBtnNext.textContent = current < questions.length - 1 ? "Siguiente pregunta ▶️" : "Finalizar ✅";
 
       elModalBackdrop.classList.add("show");
-      // En móvil, centrar ya lo hace el flex del backdrop
 
       elBtnNext.onclick = () => {
         elModalBackdrop.classList.remove("show");
@@ -446,6 +459,17 @@
     document.getElementById("btnReplay").addEventListener("click", () => {
       startQuiz();
     });
+
+    // ====== Exhaust helpers ======
+    function updateExhaust(){
+      const frac = Math.max(0, Math.min(1, timeLeft / TIEMPO_PREGUNTA));
+      const hue = Math.round(120 * frac); // 120=verde, 0=rojo
+      const pct = Math.max(2, Math.round(frac * 100)); // nunca 0 para que se vea
+      if(elExhaust){
+        elExhaust.style.width = pct + "%";
+        elExhaust.style.background = `hsl(${hue}, 70%, 45%)`;
+      }
+    }
   </script>
 </body>
 </html>
