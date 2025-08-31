@@ -1,230 +1,377 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Juego Estatuto Docente - Cap. XII</title>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/tabletop.js/1.5.4/tabletop.min.js"></script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Quiz Estatuto Docente — Cap. XII: Del Ingreso</title>
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: #f3efdc;
-      margin: 0;
-      padding: 0;
-      color: #24496e;
+    :root{
+      --azul:#24496e; --violeta:#4d3069; --celeste:#3d8fb0; --beige:#f3efdc; --rojo:#da6863;
     }
-    .container {
-      max-width: 600px;
-      margin: auto;
-      padding: 15px;
+    *{box-sizing:border-box}
+    body{
+      margin:0; font-family:system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      background:var(--beige); color:var(--azul);
+      display:flex; min-height:100vh; align-items:center; justify-content:center;
     }
-    h1 {
-      text-align: center;
-      color: #4d3069;
+    .app{
+      width:92%; max-width:560px; background:#fff; border-radius:20px;
+      box-shadow:0 10px 30px rgba(0,0,0,.15); padding:18px 16px 20px;
     }
-    .question {
-      font-size: 18px;
-      margin-bottom: 10px;
+    header{ text-align:center; margin-bottom:8px;}
+    header h1{ margin:0; font-size:1.35rem; color:var(--azul); }
+    header p{ margin:6px 0 0; color:var(--violeta); font-weight:600; }
+    .timer{ margin:10px 0 14px; font-weight:700; color:var(--rojo); text-align:center; }
+    .question{ font-size:1.05rem; font-weight:700; margin:4px 0 10px; color:var(--azul);}
+    .options{ display:grid; gap:8px; }
+    .btn{
+      width:100%; padding:12px 14px; border:0; border-radius:12px; cursor:pointer;
+      font-size:1rem; color:#fff; background:var(--celeste); transition:transform .05s ease, opacity .15s ease;
     }
-    .options button {
-      display: block;
-      width: 100%;
-      padding: 12px;
-      margin: 5px 0;
-      border: none;
-      border-radius: 8px;
-      background: #3d8fb0;
-      color: white;
-      font-size: 16px;
+    .btn:hover{ opacity:.9 }
+    .btn:active{ transform:scale(.995) }
+    .btn.alt{ background:var(--rojo) }
+    .btn.dark{ background:var(--azul) }
+    .btn.violet{ background:var(--violeta) }
+    .btn-row{ display:grid; gap:10px; margin-top:12px; }
+    .muted{ color:#666; font-size:.95rem; text-align:center; }
+    .hidden{ display:none !important; }
+    .result h2{ margin:0 0 6px; color:var(--violeta); }
+    .result p{ margin:6px 0; }
+    .leaderboard{
+      margin-top:14px; background:#fff; border:1px solid #e8e6de; border-radius:14px; overflow:hidden;
     }
-    .options button:hover {
-      background: #24496e;
+    table{ width:100%; border-collapse:collapse; }
+    thead th{
+      background:var(--violeta); color:#fff; padding:10px; font-weight:700; font-size:.95rem; text-align:center;
     }
-    #timer {
-      font-size: 20px;
-      text-align: center;
-      margin: 10px 0;
-      color: #da6863;
+    tbody td{
+      border-top:1px solid #eee; padding:9px; font-size:.95rem; text-align:center; color:#1d2a38;
     }
-    #score {
-      font-size: 20px;
-      text-align: center;
-      margin: 15px 0;
+    .pill{
+      display:inline-block; padding:2px 8px; border-radius:999px; background:#eef4f8; color:#274b6d; font-size:.8rem;
     }
-    #leaderboard {
-      margin-top: 20px;
+    .topbar{
+      display:grid; gap:8px; margin:8px 0 10px;
+      grid-template-columns: 1fr 1fr; /* dos por fila en móvil */
     }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 10px;
-      background: white;
-    }
-    table, th, td {
-      border: 1px solid #ccc;
-    }
-    th {
-      background: #24496e;
-      color: white;
-      padding: 8px;
-    }
-    td {
-      padding: 8px;
-      text-align: center;
-    }
-    .fixed-buttons {
-      position: fixed;
-      bottom: 15px;
-      left: 50%;
-      transform: translateX(-50%);
-      display: flex;
-      gap: 10px;
-    }
-    .fixed-buttons button {
-      background: #da6863;
-      border: none;
-      color: white;
-      padding: 10px 15px;
-      border-radius: 8px;
-      font-size: 14px;
-    }
-    .fixed-buttons button:hover {
-      background: #4d3069;
+    @media (min-width:520px){
+      .topbar{ grid-template-columns: 1fr 1fr 1fr; } /* tres por fila en desktop */
     }
   </style>
 </head>
 <body>
-  <div class="container">
-    <h1>Juego Estatuto Docente<br><small>Capítulo XII - Del Ingreso</small></h1>
-    <div id="game"></div>
-    <div id="timer"></div>
-    <div id="score"></div>
-    <div id="leaderboard"></div>
-  </div>
+  <div class="app">
+    <header>
+      <h1>Quiz: Estatuto Docente</h1>
+      <p>Capítulo XII — Del Ingreso</p>
+    </header>
 
-  <!-- Botones fijos -->
-  <div class="fixed-buttons">
-    <button onclick="showLeaderboard()">Tabla de Posiciones</button>
-    <button onclick="window.open('https://drive.google.com/file/d/1ct0y2Phs9b45tcL2kLm8Cl6fA6dw8Y_F/view?usp=sharing','_blank')">📕 Estatuto</button>
-    <button onclick="clearLeaderboard()">🗑️ Limpiar Tabla</button>
+    <!-- Top buttons -->
+    <div class="topbar">
+      <button class="btn violet" id="btnToggleLB">📊 Ver / ocultar posiciones</button>
+      <button class="btn dark" id="btnEstatuto">📕 Descargar Estatuto</button>
+      <button class="btn alt" id="btnClear">🗑️ Limpiar tabla</button>
+    </div>
+
+    <!-- Game -->
+    <div id="game">
+      <div class="timer">⏳ Tiempo restante: <span id="timer">20</span>s</div>
+      <div class="question" id="question"></div>
+      <div class="options" id="options"></div>
+      <p class="muted" id="progress"></p>
+    </div>
+
+    <!-- Result -->
+    <div id="result" class="result hidden">
+      <h2>¡Juego terminado!</h2>
+      <p>Puntaje obtenido: <span id="finalScore" class="pill">0</span></p>
+      <p>Tiempo total usado: <span id="finalTime" class="pill">0s</span></p>
+      <div class="btn-row">
+        <button class="btn dark" id="btnReplay">🔄 Volver a jugar</button>
+      </div>
+    </div>
+
+    <!-- Leaderboard -->
+    <div id="leaderboardWrap" class="leaderboard hidden">
+      <table>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Jugador</th>
+            <th>Puntaje</th>
+            <th>Tiempo (s)</th>
+            <th>Fecha</th>
+          </tr>
+        </thead>
+        <tbody id="leaderboardBody">
+          <tr><td colspan="5" class="muted">Cargando…</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <p class="muted">Puntaje: 100 por acierto + 5 por cada segundo ahorrado.</p>
   </div>
 
   <script>
+    // ====== CONFIG ======
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwX8whu7tz-FnGiZ0Eo9rzOJZKjxF3fQQWpaTXpV98vDG0mIDsg0Ygca_WyEiRYcSOG/exec";
+    const TIEMPO_PREGUNTA = 20;
+
+    // ====== PREGUNTAS (6) ======
     const questions = [
       {
-        question: "¿Quiénes pueden ingresar a la docencia según el Estatuto?",
-        options: ["Sólo ciudadanos argentinos", "Personas con título habilitante", "Mayores de 21 años", "Graduados universitarios"],
-        correct: 1
+        q: "¿Cómo se realiza el ingreso a la docencia según el Cap. XII?",
+        options: [
+          "Por orden de mérito en listados oficiales",
+          "Por recomendación de directivos",
+          "Por sorteo de cargos",
+          "Por votación en la escuela"
+        ],
+        a: 0
       },
       {
-        question: "¿Qué organismo confecciona los listados oficiales de aspirantes?",
-        options: ["Ministerio de Educación", "Consejo Escolar", "Jefatura Distrital", "Sindicatos Docentes"],
-        correct: 1
+        q: "¿Qué organismo confecciona y aprueba los listados de aspirantes?",
+        options: [
+          "Consejo Escolar",
+          "Dirección General de Cultura y Educación",
+          "Sindicatos Docentes",
+          "Jefatura Distrital"
+        ],
+        a: 1
       },
       {
-        question: "¿Qué requisito es indispensable para ingresar?",
-        options: ["Experiencia previa", "Antecedentes docentes", "Título habilitante", "Ser mayor de 25 años"],
-        correct: 2
+        q: "Requisito básico para figurar en los listados de ingreso:",
+        options: [
+          "Antigüedad docente comprobable",
+          "Tener título habilitante",
+          "Experiencia previa mínima",
+          "Recomendación gremial"
+        ],
+        a: 1
       },
       {
-        question: "¿Cómo se realiza la inscripción de aspirantes?",
-        options: ["De forma presencial en escuelas", "En la Dirección General de Cultura y Educación", "En el Consejo Escolar", "En los sindicatos"],
-        correct: 2
+        q: "Periodicidad de inscripción y actualización de listados:",
+        options: ["Anual", "Cada 3 años", "Cada 5 años", "A demanda de cada escuela"],
+        a: 0
       },
       {
-        question: "¿Cuál es el criterio principal para el orden de mérito?",
-        options: ["Edad", "Antigüedad", "Promedio del título y antecedentes", "Fecha de inscripción"],
-        correct: 2
+        q: "Criterio principal para ordenar a los aspirantes:",
+        options: [
+          "Edad del aspirante",
+          "Fecha de inscripción",
+          "Puntaje del escalafón (antecedentes y títulos)",
+          "Entrevista personal"
+        ],
+        a: 2
+      },
+      {
+        q: "¿Cómo se otorgan los cargos a los aspirantes?",
+        options: [
+          "En acto público según orden de mérito",
+          "Por decisión del director",
+          "Por concurso de antecedentes y oposición en cada escuela",
+          "Por inscripción espontánea el día del inicio"
+        ],
+        a: 0
       }
     ];
 
-    let currentQuestion = 0;
+    // ====== ESTADO DE JUEGO ======
+    let current = 0;
     let score = 0;
-    let timer;
-    let timeLeft = 20;
-    let playerName = prompt("Ingrese su nombre para jugar:");
+    let timer = null;
+    let timeLeft = TIEMPO_PREGUNTA;
+    let totalTimeUsed = 0;
+    let playerName = null;
 
-    function startGame() {
+    // ====== NODOS ======
+    const elTimer = document.getElementById("timer");
+    const elQuestion = document.getElementById("question");
+    const elOptions = document.getElementById("options");
+    const elProgress = document.getElementById("progress");
+    const elGame = document.getElementById("game");
+    const elResult = document.getElementById("result");
+    const elFinalScore = document.getElementById("finalScore");
+    const elFinalTime = document.getElementById("finalTime");
+    const elLBWrap = document.getElementById("leaderboardWrap");
+    const elLBTbody = document.getElementById("leaderboardBody");
+
+    // ====== INICIO ======
+    startQuiz();
+
+    function startQuiz(){
       score = 0;
-      currentQuestion = 0;
-      showQuestion();
+      current = 0;
+      totalTimeUsed = 0;
+      playerName = prompt("Ingresá tu nombre para jugar:") || "Anónimo";
+      elResult.classList.add("hidden");
+      elGame.classList.remove("hidden");
+      renderQuestion();
+      startTimer();
     }
 
-    function showQuestion() {
-      if (currentQuestion >= questions.length) {
-        endGame();
-        return;
-      }
-
-      document.getElementById("timer").innerText = `Tiempo: 20s`;
-      timeLeft = 20;
-
-      let q = questions[currentQuestion];
-      let html = `<div class="question">${q.question}</div><div class="options">`;
+    function renderQuestion(){
+      const q = questions[current];
+      elQuestion.textContent = q.q;
+      elOptions.innerHTML = "";
       q.options.forEach((opt, i) => {
-        html += `<button onclick="checkAnswer(${i})">${opt}</button>`;
+        const btn = document.createElement("button");
+        btn.className = "btn";
+        btn.textContent = opt;
+        btn.onclick = () => selectAnswer(i, btn);
+        elOptions.appendChild(btn);
       });
-      html += `</div>`;
-      document.getElementById("game").innerHTML = html;
+      timeLeft = TIEMPO_PREGUNTA;
+      elTimer.textContent = timeLeft;
+      elProgress.textContent = `Pregunta ${current+1} de ${questions.length}`;
+    }
 
+    function startTimer(){
+      clearInterval(timer);
       timer = setInterval(() => {
         timeLeft--;
-        document.getElementById("timer").innerText = `Tiempo: ${timeLeft}s`;
-        if (timeLeft <= 0) {
+        elTimer.textContent = timeLeft;
+        if(timeLeft <= 0){
           clearInterval(timer);
-          currentQuestion++;
-          showQuestion();
+          totalTimeUsed += TIEMPO_PREGUNTA; // agotó el tiempo
+          nextQuestion();
         }
       }, 1000);
     }
 
-    function checkAnswer(answer) {
+    function selectAnswer(idx, btn){
+      // desactivar para evitar doble click
+      [...elOptions.children].forEach(b => b.disabled = true);
+
       clearInterval(timer);
-      if (answer === questions[currentQuestion].correct) {
-        score += 100 + timeLeft * 5;
+      const q = questions[current];
+      const used = TIEMPO_PREGUNTA - timeLeft;
+      totalTimeUsed += used;
+
+      if(idx === q.a){
+        score += 100 + (timeLeft * 5);
       }
-      currentQuestion++;
-      showQuestion();
+      // breve delay para feedback visual si quisieras
+      setTimeout(nextQuestion, 200);
     }
 
-    function endGame() {
-      document.getElementById("game").innerHTML = `<h2>Juego Terminado</h2><p>Puntaje final: ${score}</p>`;
-      document.getElementById("timer").innerHTML = "";
-      saveScore(playerName, score);
-    }
-
-    // === Google Sheet Integration ===
-    const publicSpreadsheetUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTFNEEMMAkTPZV1gXGlBs6mkttfhVWzfANbuCaY0VDEvL_KrxFbQ6B3TZn6E3EWKM6uxgkQ7URGoR-t/pub?gid=0&single=true&output=csv';
-
-    function showLeaderboard() {
-      Tabletop.init({
-        key: publicSpreadsheetUrl,
-        simpleSheet: true,
-        callback: function(data) {
-          let html = "<h2>Tabla de Posiciones</h2><table><tr><th>Jugador</th><th>Puntaje</th></tr>";
-          data.forEach(row => {
-            html += `<tr><td>${row.Jugador}</td><td>${row.Puntaje}</td></tr>`;
-          });
-          html += "</table>";
-          document.getElementById("leaderboard").innerHTML = html;
-        }
-      });
-    }
-
-    function saveScore(name, score) {
-      alert("⚠️ Atención: Para guardar los puntajes en la tabla compartida se necesita un script de Google Apps Script. Actualmente solo se lee la tabla.");
-    }
-
-    function clearLeaderboard() {
-      let clave = prompt("Ingrese la clave para limpiar la tabla:");
-      if (clave === "NestorVive#1982") {
-        alert("⚠️ Para limpiar la tabla en Google Sheets también se necesita Apps Script.");
+    function nextQuestion(){
+      current++;
+      if(current < questions.length){
+        renderQuestion();
+        startTimer();
       } else {
-        alert("Clave incorrecta.");
+        endQuiz();
       }
     }
 
-    startGame();
+    async function endQuiz(){
+      elGame.classList.add("hidden");
+      elResult.classList.remove("hidden");
+      elFinalScore.textContent = score;
+      elFinalTime.textContent = `${totalTimeUsed}s`;
+
+      // Guardar en tabla global
+      try{
+        await fetch(`${SCRIPT_URL}?action=add&nombre=${encodeURIComponent(playerName)}&puntaje=${encodeURIComponent(score)}&tiempo=${encodeURIComponent(totalTimeUsed)}`);
+      }catch(e){
+        console.error(e);
+        alert("⚠️ No se pudo guardar el puntaje en la tabla global. Probá de nuevo más tarde.");
+      }
+
+      // refrescar leaderboard si está visible
+      if(!elLBWrap.classList.contains("hidden")){
+        await loadLeaderboard();
+      }
+    }
+
+    // ====== LEADERBOARD GLOBAL (Apps Script) ======
+    async function loadLeaderboard(){
+      elLBTbody.innerHTML = `<tr><td colspan="5" class="muted">Cargando…</td></tr>`;
+      try{
+        const res = await fetch(`${SCRIPT_URL}?action=get`);
+        const rows = await res.json(); // se espera array de arrays
+        // Primera fila: encabezados. Luego: [Nombre, Puntaje, Tiempo, Fecha]
+        const data = (rows || []).slice(1).filter(r => r && r.length);
+        // Ordenar por puntaje desc, y a igualdad por tiempo asc
+        data.sort((a,b) => (Number(b[1]||0) - Number(a[1]||0)) || (Number(a[2]||0) - Number(b[2]||0)));
+
+        if(data.length === 0){
+          elLBTbody.innerHTML = `<tr><td colspan="5" class="muted">No hay registros aún.</td></tr>`;
+          return;
+        }
+
+        elLBTbody.innerHTML = "";
+        data.forEach((r, i) => {
+          const tr = document.createElement("tr");
+          const fecha = r[3] ? formatDate(r[3]) : "-";
+          tr.innerHTML = `
+            <td>${i+1}</td>
+            <td>${escapeHtml(r[0] ?? "—")}</td>
+            <td>${Number(r[1]||0)}</td>
+            <td>${Number(r[2]||0)}</td>
+            <td>${fecha}</td>
+          `;
+          elLBTbody.appendChild(tr);
+        });
+      }catch(e){
+        console.error(e);
+        elLBTbody.innerHTML = `<tr><td colspan="5" class="muted">Error al cargar la tabla.</td></tr>`;
+      }
+    }
+
+    function formatDate(v){
+      // Apps Script suele devolver fecha como string; mostramos tal cual o intentamos formatear simple.
+      const d = new Date(v);
+      if(!isNaN(d.getTime())){
+        const dd = String(d.getDate()).padStart(2,"0");
+        const mm = String(d.getMonth()+1).padStart(2,"0");
+        const yyyy = d.getFullYear();
+        const hh = String(d.getHours()).padStart(2,"0");
+        const mi = String(d.getMinutes()).padStart(2,"0");
+        return `${dd}/${mm}/${yyyy} ${hh}:${mi}`;
+      }
+      return String(v);
+    }
+
+    function escapeHtml(str){
+      return String(str).replace(/[&<>"']/g, s => ({
+        "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+      }[s]));
+    }
+
+    // ====== BOTONES SUPERIORES ======
+    document.getElementById("btnToggleLB").addEventListener("click", async () => {
+      elLBWrap.classList.toggle("hidden");
+      if(!elLBWrap.classList.contains("hidden")){
+        await loadLeaderboard();
+      }
+    });
+
+    document.getElementById("btnEstatuto").addEventListener("click", () => {
+      window.open("https://drive.google.com/file/d/1ct0y2Phs9b45tcL2kLm8Cl6fA6dw8Y_F/view?usp=sharing", "_blank", "noopener");
+    });
+
+    document.getElementById("btnClear").addEventListener("click", async () => {
+      const clave = prompt("Ingrese la clave para limpiar la tabla:");
+      if(!clave) return;
+      try{
+        const res = await fetch(`${SCRIPT_URL}?action=clear&clave=${encodeURIComponent(clave)}`);
+        const text = await res.text();
+        alert(text);
+        if(!elLBWrap.classList.contains("hidden")){
+          await loadLeaderboard();
+        }
+      }catch(e){
+        console.error(e);
+        alert("Error al limpiar la tabla.");
+      }
+    });
+
+    document.getElementById("btnReplay").addEventListener("click", () => {
+      startQuiz();
+    });
   </script>
 </body>
 </html>
