@@ -139,6 +139,7 @@ const questions=[
 
 let current=0, score=0, timer=null, timeLeft=TIEMPO_PREGUNTA, totalTimeUsed=0;
 let playerName=null;
+let modalActivo=false;
 
 const elTimer=document.getElementById("timer");
 const elTimebar=document.getElementById("timebar");
@@ -151,8 +152,6 @@ const elFinalScore=document.getElementById("finalScore");
 const elFinalTime=document.getElementById("finalTime");
 const elLBWrap=document.getElementById("leaderboardWrap");
 const elLBTbody=document.getElementById("leaderboardBody");
-
-let modalActivo=false;
 
 startQuiz();
 
@@ -232,7 +231,6 @@ function nextQuestionModal(){
   } else endQuiz();
 }
 
-// Carga y registro puntaje
 async function endQuiz(){
   elGame.classList.add("hidden");
   elResult.classList.remove("hidden");
@@ -244,7 +242,6 @@ async function endQuiz(){
   if(!elLBWrap.classList.contains("hidden")) await loadLeaderboard();
 }
 
-// Tabla global top20
 async function loadLeaderboard(){
   elLBTbody.innerHTML=`<tr><td colspan="5" class="muted">Cargando…</td></tr>`;
   try{
