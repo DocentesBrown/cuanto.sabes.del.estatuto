@@ -1,292 +1,278 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <title>Quiz Estatuto Docente — Cap. XII: Del Ingreso</title>
-  <style>
-    :root{
-      --azul:#24496e; --violeta:#4d3069; --celeste:#3d8fb0; --beige:#f3efdc; --rojo:#da6863;
-    }
-    *{box-sizing:border-box}
-    body{
-      margin:0; font-family:system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-      background:var(--beige); color:var(--azul);
-      display:flex; min-height:100vh; align-items:center; justify-content:center;
-    }
-    .app{
-      width:92%; max-width:560px; background:#fff; border-radius:20px;
-      box-shadow:0 10px 30px rgba(0,0,0,.15); padding:18px 16px 20px;
-    }
-    header{ text-align:center; margin-bottom:8px;}
-    header h1{ margin:0; font-size:1.35rem; color:var(--azul); }
-    header p{ margin:6px 0 0; color:var(--violeta); font-weight:600; }
-    .timer{ margin:10px 0 14px; font-weight:700; color:var(--rojo); text-align:center; }
-    .question{ font-size:1.05rem; font-weight:700; margin:4px 0 10px; color:var(--azul);}
-    .options{ display:grid; gap:8px; }
-    .btn{
-      width:100%; padding:12px 14px; border:0; border-radius:12px; cursor:pointer;
-      font-size:1rem; color:#fff; background:var(--celeste); transition:transform .05s ease, opacity .15s ease;
-    }
-    .btn:hover{ opacity:.9 }
-    .btn:active{ transform:scale(.995) }
-    .btn.alt{ background:var(--rojo) }
-    .btn.dark{ background:var(--azul) }
-    .btn.violet{ background:var(--violeta) }
-    .btn-row{ display:grid; gap:10px; margin-top:12px; }
-    .muted{ color:#666; font-size:.95rem; text-align:center; }
-    .hidden{ display:none !important; }
-    .result h2{ margin:0 0 6px; color:var(--violeta); }
-    .result p{ margin:6px 0; }
-    .leaderboard{
-      margin-top:14px; background:#fff; border:1px solid #e8e6de; border-radius:14px; overflow:hidden;
-    }
-    table{ width:100%; border-collapse:collapse; }
-    thead th{
-      background:var(--violeta); color:#fff; padding:10px; font-weight:700; font-size:.95rem; text-align:center;
-    }
-    tbody td{
-      border-top:1px solid #eee; padding:9px; font-size:.95rem; text-align:center; color:#1d2a38;
-    }
-    .pill{
-      display:inline-block; padding:2px 8px; border-radius:999px; background:#eef4f8; color:#274b6d; font-size:.8rem;
-    }
-    .topbar{
-      display:grid; gap:8px; margin:8px 0 10px;
-      grid-template-columns: 1fr;
-    }
-    @media (min-width:520px){
-      .topbar{ grid-template-columns: 1fr 1fr 1fr; }
-    }
-    /* Modal */
-    .modal {
-      display: none;
-      position: fixed;
-      z-index: 1000;
-      left: 0; top: 0;
-      width: 100%; height: 100%;
-      background-color: rgba(0,0,0,0.6);
-    }
-    .modal-content {
-      background: white;
-      margin: 20% auto;
-      padding: 20px;
-      border-radius: 12px;
-      width: 80%;
-      max-width: 400px;
-      text-align: center;
-    }
-    .modal button {
-      margin-top: 1rem;
-      padding: 0.5rem 1rem;
-      background: var(--celeste);
-      color: white;
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
-    }
-    .modal button:hover { background: var(--azul); }
-    .buttons{
-      display:grid; gap:10px; margin-top:16px;
-    }
-  </style>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Quiz Estatuto Docente — Cap. XII: Del Ingreso</title>
+<style>
+:root{
+  --azul:#24496e; --violeta:#4d3069; --celeste:#3d8fb0; --beige:#f3efdc; --rojo:#da6863;
+  --btn-soft-azul:#5a9fc9; --btn-soft-violeta:#8160a0; --btn-soft-rojo:#e29087;
+  --time-verde:#4caf50; --time-naranja:#ff9800; --time-rojo:#f44336;
+}
+*{box-sizing:border-box;}
+body{
+  margin:0; font-family:system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  background:var(--beige); color:var(--azul); display:flex; justify-content:center; padding:10px 0;
+}
+.app{
+  width:92%; max-width:600px; background:#fff; border-radius:20px;
+  box-shadow:0 10px 30px rgba(0,0,0,.15); padding:20px;
+}
+header{text-align:center; margin-bottom:12px;}
+header h1{ margin:0; font-size:1.5rem; color:var(--azul);}
+header p{ margin:4px 0 0; color:var(--violeta); font-weight:600;}
+.timer{ margin:10px 0 6px; font-weight:700; color:var(--rojo); text-align:center; }
+.timebar-wrap{
+  background:#eee; border-radius:12px; overflow:hidden; height:12px; margin-bottom:12px;
+}
+.timebar{height:100%; width:100%; transition:width 1s linear, background-color 0.5s;}
+.question{
+  font-size:1.25rem; font-weight:700; margin:8px 0 12px; color:var(--azul);
+  background:#eef4f8; padding:10px 12px; border-radius:12px;
+}
+.options{ display:grid; gap:8px; margin-bottom:10px; }
+.btn{
+  width:100%; padding:12px 14px; border:0; border-radius:12px; cursor:pointer;
+  font-size:1rem; color:#fff; transition:transform .05s ease, opacity .15s ease;
+}
+.btn:hover{ opacity:.9 }
+.btn:active{ transform:scale(.995) }
+.btn.alt{ background:var(--btn-soft-rojo) }
+.btn.dark{ background:var(--btn-soft-azul) }
+.btn.violet{ background:var(--btn-soft-violeta) }
+.btn-row{ display:grid; gap:10px; margin-top:12px; }
+.muted{ color:#666; font-size:.95rem; text-align:center; }
+.hidden{ display:none !important; }
+.result h2{ margin:0 0 6px; color:var(--violeta); }
+.result p{ margin:6px 0; }
+.leaderboard{ margin-top:14px; background:#fff; border:1px solid #e8e6de; border-radius:14px; overflow:hidden; }
+table{ width:100%; border-collapse:collapse; }
+thead th{ background:var(--violeta); color:#fff; padding:10px; font-weight:700; font-size:.95rem; text-align:center; }
+tbody td{ border-top:1px solid #eee; padding:9px; font-size:.95rem; text-align:center; color:#1d2a38; }
+.pill{ display:inline-block; padding:2px 8px; border-radius:999px; background:#eef4f8; color:#274b6d; font-size:.8rem; }
+.topbar{ display:grid; gap:8px; margin:8px 0 10px; grid-template-columns:1fr; }
+@media(min-width:520px){ .topbar{ grid-template-columns:1fr 1fr 1fr; } }
+
+/* Modal centrado */
+.modal {
+  display: none; position: fixed; z-index:1000;
+  left: 0; top: 0; width: 100%; height: 100%;
+  background-color: rgba(0,0,0,0.5);
+  display:flex; align-items:center; justify-content:center;
+}
+.modal-content{
+  background:var(--beige); padding:20px; border-radius:12px; width:80%; max-width:400px;
+  text-align:center; box-shadow:0 5px 20px rgba(0,0,0,0.25);
+}
+.modal button{
+  margin-top:1rem; padding:0.5rem 1rem; background:var(--celeste); color:white; border:none; border-radius:8px; cursor:pointer;
+}
+.modal button:hover{ background:var(--azul); }
+.buttons{ display:grid; gap:10px; margin-top:16px; }
+</style>
 </head>
 <body>
-  <div class="app">
-    <header>
-      <h1>Quiz: Estatuto Docente</h1>
-      <p>Capítulo XII — Del Ingreso</p>
-    </header>
+<div class="app">
+<header>
+  <h1>Quiz: Estatuto Docente</h1>
+  <p>Capítulo XII — Del Ingreso</p>
+</header>
 
-    <!-- Game -->
-    <div id="game">
-      <div class="timer">⏳ Tiempo restante: <span id="timer">20</span>s</div>
-      <div class="question" id="question"></div>
-      <div class="options" id="options"></div>
-      <p class="muted" id="progress"></p>
-    </div>
+<div id="game">
+  <div class="timer">⏳ Tiempo restante: <span id="timer">20</span>s</div>
+  <div class="timebar-wrap"><div class="timebar" id="timebar"></div></div>
+  <div class="question" id="question"></div>
+  <div class="options" id="options"></div>
+  <p class="muted" id="progress"></p>
+</div>
 
-    <!-- Result -->
-    <div id="result" class="result hidden">
-      <h2>¡Juego terminado!</h2>
-      <p>Puntaje obtenido: <span id="finalScore" class="pill">0</span></p>
-      <p>Tiempo total usado: <span id="finalTime" class="pill">0s</span></p>
-      <div class="btn-row">
-        <button class="btn dark" id="btnReplay">🔄 Volver a jugar</button>
-      </div>
-    </div>
-
-    <!-- Leaderboard -->
-    <div id="leaderboardWrap" class="leaderboard hidden">
-      <table>
-        <thead>
-          <tr>
-            <th>#</th>
-            <th>Jugador</th>
-            <th>Puntaje</th>
-            <th>Tiempo (s)</th>
-            <th>Fecha</th>
-          </tr>
-        </thead>
-        <tbody id="leaderboardBody">
-          <tr><td colspan="5" class="muted">Cargando…</td></tr>
-        </tbody>
-      </table>
-    </div>
-
-    <!-- Botones abajo -->
-    <div class="buttons topbar">
-      <button class="btn violet" id="btnToggleLB">📊 Ver / ocultar posiciones</button>
-      <button class="btn dark" id="btnEstatuto">📕 Descargar Estatuto</button>
-      <button class="btn alt" id="btnClear">🗑️ Limpiar tabla</button>
-    </div>
-
-    <p class="muted">Puntaje: 100 por acierto + 5 por cada segundo ahorrado.</p>
+<div id="result" class="result hidden">
+  <h2>¡Juego terminado!</h2>
+  <p>Puntaje obtenido: <span id="finalScore" class="pill">0</span></p>
+  <p>Tiempo total usado: <span id="finalTime" class="pill">0s</span></p>
+  <div class="btn-row">
+    <button class="btn dark" id="btnReplay">🔄 Volver a jugar</button>
   </div>
+</div>
 
-  <!-- Modal -->
-  <div id="answerModal" class="modal">
-    <div class="modal-content">
-      <p id="answerText"></p>
-      <button onclick="nextQuestionModal()">Siguiente</button>
-    </div>
+<div id="leaderboardWrap" class="leaderboard hidden">
+  <table>
+    <thead>
+      <tr>
+        <th>#</th><th>Jugador</th><th>Puntaje</th><th>Tiempo (s)</th><th>Fecha</th>
+      </tr>
+    </thead>
+    <tbody id="leaderboardBody">
+      <tr><td colspan="5" class="muted">Cargando…</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<div class="buttons topbar">
+  <button class="btn violet" id="btnToggleLB">📊 Ver / ocultar posiciones</button>
+  <button class="btn dark" id="btnEstatuto">📕 Descargar Estatuto</button>
+  <button class="btn alt" id="btnClear">🗑️ Limpiar tabla</button>
+</div>
+<p class="muted">Puntaje: 100 por acierto + 5 por cada segundo ahorrado.</p>
+</div>
+
+<div id="answerModal" class="modal">
+  <div class="modal-content">
+    <p id="answerText"></p>
+    <button onclick="nextQuestionModal()">Siguiente</button>
   </div>
+</div>
 
-  <script>
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwX8whu7tz-FnGiZ0Eo9rzOJZKjxF3fQQWpaTXpV98vDG0mIDsg0Ygca_WyEiRYcSOG/exec";
-    const TIEMPO_PREGUNTA = 20;
+<script>
+const SCRIPT_URL="https://script.google.com/macros/s/AKfycbwX8whu7tz-FnGiZ0Eo9rzOJZKjxF3fQQWpaTXpV98vDG0mIDsg0Ygca_WyEiRYcSOG/exec";
+const TIEMPO_PREGUNTA=20;
 
-    const questions = [
-      {q:"¿Cómo se realiza el ingreso a la docencia según el Cap. XII?", options:["Por orden de mérito","Por recomendación","Por sorteo","Por votación"], a:0},
-      {q:"¿Qué organismo confecciona y aprueba los listados de aspirantes?", options:["Consejo Escolar","DGCyE","Sindicatos","Jefatura Distrital"], a:1},
-      {q:"Requisito básico para figurar en los listados de ingreso:", options:["Antigüedad","Título habilitante","Experiencia","Recomendación"], a:1},
-      {q:"Periodicidad de inscripción y actualización de listados:", options:["Anual","Cada 3 años","Cada 5 años","A demanda"], a:0},
-      {q:"Criterio principal para ordenar a los aspirantes:", options:["Edad","Fecha de inscripción","Puntaje","Entrevista"], a:2},
-      {q:"¿Cómo se otorgan los cargos a los aspirantes?", options:["Acto público","Decisión del director","Concurso","Inscripción espontánea"], a:0}
-    ];
+const questions=[
+  {q:"¿Cómo se realiza el ingreso a la docencia según el Cap. XII?", options:["Por orden de mérito","Por recomendación","Por sorteo","Por votación"], a:0},
+  {q:"¿Qué organismo confecciona y aprueba los listados de aspirantes?", options:["Consejo Escolar","DGCyE","Sindicatos","Jefatura Distrital"], a:1},
+  {q:"Requisito básico para figurar en los listados de ingreso:", options:["Antigüedad","Título habilitante","Experiencia","Recomendación"], a:1},
+  {q:"Periodicidad de inscripción y actualización de listados:", options:["Anual","Cada 3 años","Cada 5 años","A demanda"], a:0},
+  {q:"Criterio principal para ordenar a los aspirantes:", options:["Edad","Fecha de inscripción","Puntaje","Entrevista"], a:2},
+  {q:"¿Cómo se otorgan los cargos a los aspirantes?", options:["Acto público","Decisión del director","Concurso","Inscripción espontánea"], a:0}
+];
 
-    let current = 0, score = 0, timer=null, timeLeft=TIEMPO_PREGUNTA, totalTimeUsed=0;
-    let playerName=null;
+let current=0, score=0, timer=null, timeLeft=TIEMPO_PREGUNTA, totalTimeUsed=0;
+let playerName=null;
 
-    const elTimer = document.getElementById("timer");
-    const elQuestion = document.getElementById("question");
-    const elOptions = document.getElementById("options");
-    const elProgress = document.getElementById("progress");
-    const elGame = document.getElementById("game");
-    const elResult = document.getElementById("result");
-    const elFinalScore = document.getElementById("finalScore");
-    const elFinalTime = document.getElementById("finalTime");
-    const elLBWrap = document.getElementById("leaderboardWrap");
-    const elLBTbody = document.getElementById("leaderboardBody");
+const elTimer=document.getElementById("timer");
+const elTimebar=document.getElementById("timebar");
+const elQuestion=document.getElementById("question");
+const elOptions=document.getElementById("options");
+const elProgress=document.getElementById("progress");
+const elGame=document.getElementById("game");
+const elResult=document.getElementById("result");
+const elFinalScore=document.getElementById("finalScore");
+const elFinalTime=document.getElementById("finalTime");
+const elLBWrap=document.getElementById("leaderboardWrap");
+const elLBTbody=document.getElementById("leaderboardBody");
 
-    startQuiz();
+startQuiz();
 
-    function startQuiz(){
-      score=0; current=0; totalTimeUsed=0;
-      playerName=prompt("Ingresá tu nombre para jugar:")||"Anónimo";
-      elResult.classList.add("hidden");
-      elGame.classList.remove("hidden");
-      renderQuestion();
-      startTimer();
-    }
+function startQuiz(){
+  score=0; current=0; totalTimeUsed=0;
+  playerName=prompt("Ingresá tu nombre:")||"Anónimo";
+  elResult.classList.add("hidden");
+  elGame.classList.remove("hidden");
+  renderQuestion();
+  startTimer();
+}
 
-    function renderQuestion(){
-      const q = questions[current];
-      elQuestion.textContent = q.q;
-      elOptions.innerHTML = "";
-      q.options.forEach((opt,i)=>{
-        const btn=document.createElement("button");
-        btn.className="btn";
-        btn.textContent=opt;
-        btn.onclick=()=>selectAnswer(i,btn);
-        elOptions.appendChild(btn);
-      });
-      timeLeft=TIEMPO_PREGUNTA;
-      elTimer.textContent=timeLeft;
-      elProgress.textContent=`Pregunta ${current+1} de ${questions.length}`;
-    }
+function renderQuestion(){
+  const q=questions[current];
+  elQuestion.textContent=q.q;
+  elOptions.innerHTML="";
+  q.options.forEach((opt,i)=>{
+    const btn=document.createElement("button");
+    btn.className="btn";
+    btn.textContent=opt;
+    btn.onclick=()=>selectAnswer(i);
+    elOptions.appendChild(btn);
+  });
+  timeLeft=TIEMPO_PREGUNTA;
+  elTimer.textContent=timeLeft;
+  updateTimebar();
+  elProgress.textContent=`Pregunta ${current+1} de ${questions.length}`;
+}
 
-    function startTimer(){
+function startTimer(){
+  clearInterval(timer);
+  timer=setInterval(()=>{
+    timeLeft--;
+    elTimer.textContent=timeLeft;
+    updateTimebar();
+    if(timeLeft<=0){
       clearInterval(timer);
-      timer=setInterval(()=>{
-        timeLeft--;
-        elTimer.textContent=timeLeft;
-        if(timeLeft<=0){
-          clearInterval(timer);
-          totalTimeUsed+=TIEMPO_PREGUNTA;
-          showCorrectModal(-1);
-        }
-      },1000);
+      totalTimeUsed+=TIEMPO_PREGUNTA;
+      showCorrectModal(-1);
     }
+  },1000);
+}
 
-    function selectAnswer(idx,btn){
-      [...elOptions.children].forEach(b=>b.disabled=true);
-      clearInterval(timer);
-      const q=questions[current];
-      const used=TIEMPO_PREGUNTA-timeLeft;
-      totalTimeUsed+=used;
-      showCorrectModal(idx);
-    }
+function updateTimebar(){
+  const perc=(timeLeft/TIEMPO_PREGUNTA*100)+"%";
+  elTimebar.style.width=perc;
+  if(timeLeft>TIEMPO_PREGUNTA*0.6) elTimebar.style.backgroundColor="var(--time-verde)";
+  else if(timeLeft>TIEMPO_PREGUNTA*0.3) elTimebar.style.backgroundColor="var(--time-naranja)";
+  else elTimebar.style.backgroundColor="var(--time-rojo)";
+}
 
-    function showCorrectModal(selected){
-      const q = questions[current];
-      const correctOption = q.options[q.a];
-      let message = (selected===q.a)?"✅ Correcto!":`❌ Incorrecto. La respuesta correcta era: ${correctOption}`;
-      if(selected===q.a) score += 100 + (timeLeft*5);
-      document.getElementById("answerText").textContent=message;
-      document.getElementById("answerModal").style.display="block";
-    }
+function selectAnswer(idx){
+  [...elOptions.children].forEach(b=>b.disabled=true);
+  clearInterval(timer);
+  const used=TIEMPO_PREGUNTA-timeLeft;
+  totalTimeUsed+=used;
+  showCorrectModal(idx);
+}
 
-    function nextQuestionModal(){
-      document.getElementById("answerModal").style.display="none";
-      current++;
-      if(current<questions.length){
-        renderQuestion();
-        startTimer();
-      } else endQuiz();
-    }
+function showCorrectModal(selected){
+  const q=questions[current];
+  const correctOption=q.options[q.a];
+  let message=(selected===q.a)?"✅ Correcto!":`❌ Incorrecto. La respuesta correcta era: ${correctOption}`;
+  if(selected===q.a) score+=100+(timeLeft*5);
+  document.getElementById("answerText").textContent=message;
+  document.getElementById("answerModal").style.display="flex";
+}
 
-    async function endQuiz(){
-      elGame.classList.add("hidden");
-      elResult.classList.remove("hidden");
-      elFinalScore.textContent=score;
-      elFinalTime.textContent=`${totalTimeUsed}s`;
-      try{
-        await fetch(`${SCRIPT_URL}?action=add&nombre=${encodeURIComponent(playerName)}&puntaje=${encodeURIComponent(score)}&tiempo=${encodeURIComponent(totalTimeUsed)}`);
-      }catch(e){ console.error(e); alert("No se pudo guardar el puntaje."); }
-      if(!elLBWrap.classList.contains("hidden")) await loadLeaderboard();
-    }
+function nextQuestionModal(){
+  document.getElementById("answerModal").style.display="none";
+  current++;
+  if(current<questions.length){
+    renderQuestion();
+    startTimer();
+  } else endQuiz();
+}
 
-    async function loadLeaderboard(){
-      elLBTbody.innerHTML=`<tr><td colspan="5" class="muted">Cargando…</td></tr>`;
-      try{
-        const res=await fetch(`${SCRIPT_URL}?action=get`);
-        const rows=(await res.json()).slice(1).filter(r=>r&&r.length);
-        rows.sort((a,b)=> (Number(b[1]||0)-Number(a[1]||0)) || (Number(a[2]||0)-Number(b[2]||0)));
-        const top20=rows.slice(0,20);
-        if(top20.length===0){ elLBTbody.innerHTML=`<tr><td colspan="5" class="muted">No hay registros aún.</td></tr>`; return; }
-        elLBTbody.innerHTML="";
-        top20.forEach((r,i)=>{
-          const tr=document.createElement("tr");
-          const fecha=r[3]||"-";
-          tr.innerHTML=`<td>${i+1}</td><td>${r[0]||"—"}</td><td>${Number(r[1]||0)}</td><td>${Number(r[2]||0)}</td><td>${fecha}</td>`;
-          elLBTbody.appendChild(tr);
-        });
-      }catch(e){ console.error(e); elLBTbody.innerHTML=`<tr><td colspan="5" class="muted">Error al cargar tabla.</td></tr>`; }
-    }
+async function endQuiz(){
+  elGame.classList.add("hidden");
+  elResult.classList.remove("hidden");
+  elFinalScore.textContent=score;
+  elFinalTime.textContent=`${totalTimeUsed}s`;
+  try{
+    await fetch(`${SCRIPT_URL}?action=add&nombre=${encodeURIComponent(playerName)}&puntaje=${score}&tiempo=${totalTimeUsed}`);
+  }catch(e){ console.error(e); alert("No se pudo guardar el puntaje."); }
+  if(!elLBWrap.classList.contains("hidden")) await loadLeaderboard();
+}
 
-    // -------- Botones --------
-    document.getElementById("btnToggleLB").onclick=()=>{
-      elLBWrap.classList.toggle("hidden");
-      if(!elLBWrap.classList.contains("hidden")) loadLeaderboard();
-    }
-    document.getElementById("btnEstatuto").onclick=()=>window.open("https://drive.google.com/file/d/1ct0y2Phs9b45tcL2kLm8Cl6fA6dw8Y_F/view?usp=sharing","_blank");
-    document.getElementById("btnClear").onclick=()=>{
-      const clave=prompt("Ingrese clave para limpiar tabla:");
-      if(clave==="NestorVive#1982") fetch(`${SCRIPT_URL}?action=clear`).then(()=>loadLeaderboard());
-      else alert("Clave incorrecta");
-    }
-    document.getElementById("btnReplay").onclick=startQuiz;
-  </script>
+async function loadLeaderboard(){
+  elLBTbody.innerHTML=`<tr><td colspan="5" class="muted">Cargando…</td></tr>`;
+  try{
+    const res=await fetch(`${SCRIPT_URL}?action=get`);
+    const rows=(await res.json()).slice(1).filter(r=>r&&r.length);
+    rows.sort((a,b)=> (Number(b[1]||0)-Number(a[1]||0)) || (Number(a[2]||0)-Number(b[2]||0)));
+    const top20=rows.slice(0,20);
+    if(top20.length===0){ elLBTbody.innerHTML=`<tr><td colspan="5" class="muted">No hay registros aún.</td></tr>`; return; }
+    elLBTbody.innerHTML="";
+    top20.forEach((r,i)=>{
+      const tr=document.createElement("tr");
+      const fecha=r[3]||"-";
+      tr.innerHTML=`<td>${i+1}</td><td>${r[0]||"—"}</td><td>${Number(r[1]||0)}</td><td>${Number(r[2]||0)}</td><td>${fecha}</td>`;
+      elLBTbody.appendChild(tr);
+    });
+  }catch(e){ console.error(e); elLBTbody.innerHTML=`<tr><td colspan="5" class="muted">Error al cargar tabla.</td></tr>`; }
+}
+
+document.getElementById("btnToggleLB").onclick=()=>{
+  elLBWrap.classList.toggle("hidden");
+  if(!elLBWrap.classList.contains("hidden")) loadLeaderboard();
+}
+document.getElementById("btnEstatuto").onclick=()=>window.open("https://drive.google.com/file/d/1ct0y2Phs9b45tcL2kLm8Cl6fA6dw8Y_F/view?usp=sharing","_blank");
+document.getElementById("btnClear").onclick=async ()=>{
+  const clave=prompt("Ingrese clave para limpiar tabla:");
+  if(clave==="NestorVive#1982"){
+    try{
+      await fetch(`${SCRIPT_URL}?action=clear`);
+      alert("Tabla limpiada correctamente");
+      loadLeaderboard();
+    }catch(e){ alert("No se pudo limpiar la tabla"); console.error(e);}
+  } else alert("Clave incorrecta");
+}
+document.getElementById("btnReplay").onclick=startQuiz;
+</script>
 </body>
 </html>
