@@ -16,28 +16,43 @@
     }
     .app{
       width:92%; max-width:560px; background:#fff; border-radius:20px;
-      box-shadow:0 10px 30px rgba(0,0,0,.15); padding:18px 16px 20px;
+      box-shadow:0 10px 30px rgba(0,0,0,.15); padding:18px 16px 72px; /* extra bottom space for sticky bar */
+      position:relative;
     }
     header{ text-align:center; margin-bottom:8px;}
     header h1{ margin:0; font-size:1.35rem; color:var(--azul); }
     header p{ margin:6px 0 0; color:var(--violeta); font-weight:600; }
+
     .timer{ margin:10px 0 14px; font-weight:700; color:var(--rojo); text-align:center; }
-    .question{ font-size:1.05rem; font-weight:700; margin:4px 0 10px; color:var(--azul);}
+
+    /* Mejor contraste para la pregunta */
+    .question{
+      font-size:1.1rem; font-weight:800; margin:6px 0 12px;
+      background:var(--azul); color:#fff; padding:12px 14px; border-radius:14px; line-height:1.35;
+      box-shadow:0 2px 10px rgba(0,0,0,.08);
+    }
+
     .options{ display:grid; gap:8px; }
+
     .btn{
       width:100%; padding:12px 14px; border:0; border-radius:12px; cursor:pointer;
-      font-size:1rem; color:#fff; background:var(--celeste); transition:transform .05s ease, opacity .15s ease;
+      font-size:1rem; color:#102538; background:color-mix(in srgb, var(--celeste) 35%, white);
+      transition:transform .05s ease, opacity .15s ease, box-shadow .15s ease;
+      box-shadow:0 1px 0 rgba(0,0,0,.06);
     }
-    .btn:hover{ opacity:.9 }
+    .btn:hover{ opacity:.95 }
     .btn:active{ transform:scale(.995) }
-    .btn.alt{ background:var(--rojo) }
-    .btn.dark{ background:var(--azul) }
-    .btn.violet{ background:var(--violeta) }
+    .btn.alt{ background:color-mix(in srgb, var(--rojo) 30%, white); }
+    .btn.dark{ background:color-mix(in srgb, var(--azul) 25%, white); }
+    .btn.violet{ background:color-mix(in srgb, var(--violeta) 28%, white); }
+
     .btn-row{ display:grid; gap:10px; margin-top:12px; }
     .muted{ color:#666; font-size:.95rem; text-align:center; }
     .hidden{ display:none !important; }
+
     .result h2{ margin:0 0 6px; color:var(--violeta); }
     .result p{ margin:6px 0; }
+
     .leaderboard{
       margin-top:14px; background:#fff; border:1px solid #e8e6de; border-radius:14px; overflow:hidden;
     }
@@ -48,16 +63,29 @@
     tbody td{
       border-top:1px solid #eee; padding:9px; font-size:.95rem; text-align:center; color:#1d2a38;
     }
-    .pill{
-      display:inline-block; padding:2px 8px; border-radius:999px; background:#eef4f8; color:#274b6d; font-size:.8rem;
+    .pill{ display:inline-block; padding:2px 8px; border-radius:999px; background:#eef4f8; color:#274b6d; font-size:.8rem; }
+
+    /* Barra inferior fija dentro de la tarjeta */
+    .bottombar{
+      position:sticky; bottom:0; left:0; right:0; background:linear-gradient(to top, #ffffff, rgba(255,255,255,.75));
+      padding:10px 0 6px; backdrop-filter:saturate(1.1) blur(2px);
     }
-    .topbar{
-      display:grid; gap:8px; margin:8px 0 10px;
-      grid-template-columns: 1fr 1fr; /* dos por fila en móvil */
+    .bottombar .wrap{
+      display:grid; gap:8px; grid-template-columns: 1fr 1fr; padding:0 2px;
     }
-    @media (min-width:520px){
-      .topbar{ grid-template-columns: 1fr 1fr 1fr; } /* tres por fila en desktop */
+    @media (min-width:520px){ .bottombar .wrap{ grid-template-columns: 1fr 1fr 1fr; } }
+
+    /* MODAL para respuesta correcta */
+    .modal-backdrop{
+      position:fixed; inset:0; background:rgba(0,0,0,.35); display:none; align-items:center; justify-content:center; padding:18px;
     }
+    .modal-backdrop.show{ display:flex; }
+    .modal{
+      width:100%; max-width:520px; background:var(--beige); color:var(--azul); border-radius:18px; padding:18px 16px;
+      box-shadow:0 12px 30px rgba(0,0,0,.25);
+    }
+    .modal h3{ margin:0 0 8px; color:var(--violeta); font-size:1.15rem; }
+    .modal p{ margin:0 0 12px; }
   </style>
 </head>
 <body>
@@ -66,13 +94,6 @@
       <h1>Quiz: Estatuto Docente</h1>
       <p>Capítulo XII — Del Ingreso</p>
     </header>
-
-    <!-- Top buttons -->
-    <div class="topbar">
-      <button class="btn violet" id="btnToggleLB">📊 Ver / ocultar posiciones</button>
-      <button class="btn dark" id="btnEstatuto">📕 Descargar Estatuto</button>
-      <button class="btn alt" id="btnClear">🗑️ Limpiar tabla</button>
-    </div>
 
     <!-- Game -->
     <div id="game">
@@ -87,6 +108,7 @@
       <h2>¡Juego terminado!</h2>
       <p>Puntaje obtenido: <span id="finalScore" class="pill">0</span></p>
       <p>Tiempo total usado: <span id="finalTime" class="pill">0s</span></p>
+      <p>Respuestas correctas: <span id="finalCorrect" class="pill">0</span>/<span id="finalTotal" class="pill">0</span></p>
       <div class="btn-row">
         <button class="btn dark" id="btnReplay">🔄 Volver a jugar</button>
       </div>
@@ -111,6 +133,26 @@
     </div>
 
     <p class="muted">Puntaje: 100 por acierto + 5 por cada segundo ahorrado.</p>
+
+    <!-- Barra inferior con acciones (abajo) -->
+    <div class="bottombar">
+      <div class="wrap">
+        <button class="btn violet" id="btnToggleLB">📊 Ver / ocultar posiciones</button>
+        <button class="btn dark" id="btnEstatuto">📕 Descargar Estatuto</button>
+        <button class="btn alt" id="btnClear">🗑️ Limpiar tabla</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL -->
+  <div id="modalBackdrop" class="modal-backdrop" role="dialog" aria-modal="true">
+    <div class="modal">
+      <h3 id="modalTitle">Respuesta</h3>
+      <p id="modalContent"></p>
+      <div class="btn-row">
+        <button id="btnNext" class="btn">Siguiente pregunta ▶️</button>
+      </div>
+    </div>
   </div>
 
   <script>
@@ -183,7 +225,8 @@
     let timer = null;
     let timeLeft = TIEMPO_PREGUNTA;
     let totalTimeUsed = 0;
-    let playerName = null;
+    let playerName = null; // ahora se pide al final
+    let correctCount = 0;
 
     // ====== NODOS ======
     const elTimer = document.getElementById("timer");
@@ -194,8 +237,15 @@
     const elResult = document.getElementById("result");
     const elFinalScore = document.getElementById("finalScore");
     const elFinalTime = document.getElementById("finalTime");
+    const elFinalCorrect = document.getElementById("finalCorrect");
+    const elFinalTotal = document.getElementById("finalTotal");
     const elLBWrap = document.getElementById("leaderboardWrap");
     const elLBTbody = document.getElementById("leaderboardBody");
+
+    const elModalBackdrop = document.getElementById("modalBackdrop");
+    const elModalContent = document.getElementById("modalContent");
+    const elModalTitle = document.getElementById("modalTitle");
+    const elBtnNext = document.getElementById("btnNext");
 
     // ====== INICIO ======
     startQuiz();
@@ -204,8 +254,10 @@
       score = 0;
       current = 0;
       totalTimeUsed = 0;
-      playerName = prompt("Ingresá tu nombre para jugar:") || "Anónimo";
+      correctCount = 0;
+      playerName = null; // se pedirá al final
       elResult.classList.add("hidden");
+      elLBWrap.classList.add("hidden");
       elGame.classList.remove("hidden");
       renderQuestion();
       startTimer();
@@ -235,12 +287,12 @@
         if(timeLeft <= 0){
           clearInterval(timer);
           totalTimeUsed += TIEMPO_PREGUNTA; // agotó el tiempo
-          nextQuestion();
+          showAnswerModal(false); // tiempo agotado => incorrecta
         }
       }, 1000);
     }
 
-    function selectAnswer(idx, btn){
+    function selectAnswer(idx){
       // desactivar para evitar doble click
       [...elOptions.children].forEach(b => b.disabled = true);
 
@@ -249,14 +301,31 @@
       const used = TIEMPO_PREGUNTA - timeLeft;
       totalTimeUsed += used;
 
-      if(idx === q.a){
+      const isCorrect = (idx === q.a);
+      if(isCorrect){
         score += 100 + (timeLeft * 5);
+        correctCount++;
       }
-      // breve delay para feedback visual si quisieras
-      setTimeout(nextQuestion, 200);
+      showAnswerModal(isCorrect);
     }
 
-    function nextQuestion(){
+    function showAnswerModal(isCorrect){
+      const q = questions[current];
+      const correctText = q.options[q.a];
+      elModalTitle.textContent = isCorrect ? "¡Correcto!" : "Respuesta correcta:";
+      elModalContent.textContent = correctText;
+      elBtnNext.textContent = current < questions.length - 1 ? "Siguiente pregunta ▶️" : "Finalizar ✅";
+
+      elModalBackdrop.classList.add("show");
+      // En móvil, centrar ya lo hace el flex del backdrop
+
+      elBtnNext.onclick = () => {
+        elModalBackdrop.classList.remove("show");
+        nextQuestionOrFinish();
+      };
+    }
+
+    function nextQuestionOrFinish(){
       current++;
       if(current < questions.length){
         renderQuestion();
@@ -267,10 +336,17 @@
     }
 
     async function endQuiz(){
+      // Pedir nombre al final de la última respuesta
+      if(!playerName){
+        playerName = prompt("Ingresá tu nombre para guardar tu puntaje:") || "Anónimo";
+      }
+
       elGame.classList.add("hidden");
       elResult.classList.remove("hidden");
       elFinalScore.textContent = score;
       elFinalTime.textContent = `${totalTimeUsed}s`;
+      elFinalCorrect.textContent = correctCount;
+      elFinalTotal.textContent = questions.length;
 
       // Guardar en tabla global
       try{
@@ -280,10 +356,9 @@
         alert("⚠️ No se pudo guardar el puntaje en la tabla global. Probá de nuevo más tarde.");
       }
 
-      // refrescar leaderboard si está visible
-      if(!elLBWrap.classList.contains("hidden")){
-        await loadLeaderboard();
-      }
+      // Mostrar la tabla de posiciones por defecto al terminar
+      elLBWrap.classList.remove("hidden");
+      await loadLeaderboard();
     }
 
     // ====== LEADERBOARD GLOBAL (Apps Script) ======
@@ -303,7 +378,7 @@
         }
 
         elLBTbody.innerHTML = "";
-        data.forEach((r, i) => {
+        data.slice(0,15).forEach((r, i) => { // TOP 15
           const tr = document.createElement("tr");
           const fecha = r[3] ? formatDate(r[3]) : "-";
           tr.innerHTML = `
@@ -322,7 +397,6 @@
     }
 
     function formatDate(v){
-      // Apps Script suele devolver fecha como string; mostramos tal cual o intentamos formatear simple.
       const d = new Date(v);
       if(!isNaN(d.getTime())){
         const dd = String(d.getDate()).padStart(2,"0");
@@ -337,11 +411,11 @@
 
     function escapeHtml(str){
       return String(str).replace(/[&<>"']/g, s => ({
-        "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+        "&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"
       }[s]));
     }
 
-    // ====== BOTONES SUPERIORES ======
+    // ====== BOTONES INFERIORES ======
     document.getElementById("btnToggleLB").addEventListener("click", async () => {
       elLBWrap.classList.toggle("hidden");
       if(!elLBWrap.classList.contains("hidden")){
