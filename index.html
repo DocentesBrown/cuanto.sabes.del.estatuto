@@ -271,14 +271,14 @@ document.getElementById("btnToggleLB").onclick=()=>{
 document.getElementById("btnEstatuto").onclick=()=>window.open("https://drive.google.com/file/d/1ct0y2Phs9b45tcL2kLm8Cl6fA6dw8Y_F/view?usp=sharing","_blank");
 document.getElementById("btnClear").onclick=async ()=>{
   const clave=prompt("Ingrese clave para limpiar tabla:");
-  if(clave==="NestorVive#1982"){
+  if(clave){
     try{
-      const r=await fetch(`${SCRIPT_URL}?action=clear`);
-      const text=await r.text();
+      const r = await fetch(`${SCRIPT_URL}?action=clear&clave=${encodeURIComponent(clave)}`);
+      const text = await r.text();
       if(text.includes("ok")){ alert("Tabla limpiada correctamente"); loadLeaderboard(); }
-      else alert("No se pudo limpiar la tabla");
+      else alert("Clave incorrecta o error");
     }catch(e){ alert("No se pudo limpiar la tabla"); console.error(e);}
-  } else alert("Clave incorrecta");
+  }
 }
 document.getElementById("btnReplay").onclick=startQuiz;
 </script>
