@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <title>Quiz Estatuto Docente — Cap. XIX: De las Provisionalidades y Suplencias</title>
+  <title>Quiz Reglamento General — Artículo 72: Tareas del Profesor/Maestro</title>
   <style>
     :root{
       --azul:#24496e; --violeta:#4d3069; --celeste:#3d8fb0; --beige:#f3efdc; --rojo:#da6863; --ok:#2e7d32; --bad:#c62828;
@@ -84,7 +84,7 @@
   <div class="app">
     <header>
       <h1>Docentes Brown</h1>
-      <p>Estatuto Docente - Capítulo XIX — De las Provisionalidades y Suplencias</p>
+      <p>Reglamento General de Instituciones Educativas — Artículo 72</p>
     </header>
 
     <!-- Game -->
@@ -129,7 +129,7 @@
     <div class="bottombar">
       <div class="wrap">
         <button class="btn violet" id="btnToggleLB">📊 Ver / ocultar posiciones</button>
-        <button class="btn dark" id="btnEstatuto">📕 Descargar Estatuto</button>
+        <button class="btn dark" id="btnEstatuto">📕 Descargar Reglamento</button>
         <button class="btn alt" id="btnClear">🗑️ Limpiar tabla</button>
       </div>
     </div>
@@ -162,12 +162,72 @@
 
     // ====== PREGUNTAS ======
     const questions = [
-      { q: "¿Cuál de estas opciones refleja con precisión un deber docente?", options: [" Ampliar la formación y perfeccionamiento pedagógico","Capacitarse únicamente cuando la institución lo disponga","Mantener actualizada la formación sólo en la disciplina específica","Realizar perfeccionamiento profesional únicamente si otorga puntaje"], a: 0 },
-      { q: "El derecho a la estabilidad garantiza que:", options: ["El cargo no puede modificarse nunca, salvo si el docente lo solicita voluntariamente.","El docente mantiene siempre el mismo turno y horario","El cargo y su ubicación sólo pueden modificarse conforme a causales previstas por la ley.","La estabilidad protege únicamente a titulares con más de 10 años"], a: 2 },
-      { q: "Respecto a la remuneración, el Estatuto establece:", options: ["La remuneración es fija e independiente de la jerarquía, pero varía según el nivel educativo.","El sueldo debe ser proporcional a la responsabilidad, jerarquía y antigüedad","El salario se compone sólo del sueldo básico y no admite adicionales","El docente puede negociar individualmente aumentos de sueldo"], a: 1 },
-      { q: "El acrecentamiento de módulos significa:", options: ["El docente puede sumar módulos hasta el máximo compatible","El docente puede solicitar todas los módulos disponibles en la institución","Las horas sólo se acrecientan si no hay aspirantes en listado oficial.","El acrecentamiento está permitido únicamente en cargos provisionales"], a: 0 },
-      { q: "En relación con los concursos y listados de mérito:", options: ["La publicación de listados no es obligatoria si el cargo es interino.","Los concursos deben ser públicos, pero los listados sólo compartirse de manera interna.","Los concursos pueden ser privados, pero los listados deben publicarse en forma transparente.","Los concursos deben ser públicos y los listados de mérito transparentes."], a: 3 },
-      { q: "Sobre el derecho a la defensa en actuaciones administrativas:", options: ["El derecho a la defensa se limita a la etapa final","El docente puede ejercer defensa sólo con patrocinio sindical","El derecho a la defensa aplica únicamente en sumarios","El docente puede presentar pruebas y descargos en cualquier instancia del proceso."], a: 3 }
+      {
+        q: "Según el Artículo 72, ¿cómo se define al Profesor/Maestro dentro de la institución?",
+        options: [
+          "Como personal docente de base que ejecuta el diseño curricular en el aula o en el espacio donde se produce el acto educativo.",
+          "Como integrante del equipo de conducción encargado de supervisar la tarea administrativa de la escuela.",
+          "Como personal auxiliar que acompaña las clases cuando lo solicita la dirección.",
+          "Como docente que sólo interviene en la evaluación final de los aprendizajes."
+        ],
+        a: 0,
+        explanation: "El artículo lo define como personal docente de base y ubica su tarea central en la ejecución del diseño curricular, compartida con el equipo docente y en el marco del Proyecto Institucional."
+      },
+      {
+        q: "¿Qué relación plantea el Artículo 72 entre el Profesor/Maestro y el Proyecto Institucional?",
+        options: [
+          "Debe conocerlo, pero no tiene obligación de participar en su elaboración o ajuste.",
+          "Debe participar en su elaboración, implementación y ajuste, y también en acciones de autoevaluación institucional.",
+          "Debe aplicarlo sólo cuando exista una indicación escrita de la supervisión.",
+          "Debe reemplazarlo por su planificación personal cuando considere que es necesario."
+        ],
+        a: 1,
+        explanation: "La participación docente no aparece como algo decorativo: el artículo incluye elaboración, implementación, ajuste del Proyecto Institucional y autoevaluación."
+      },
+      {
+        q: "Respecto de la planificación, ¿cuál de estas opciones se ajusta mejor al Artículo 72?",
+        options: [
+          "La planificación es opcional si el docente ya tiene experiencia en el cargo.",
+          "Debe presentarse sólo ante una visita de inspección o pedido formal de la dirección.",
+          "Debe presentarse por escrito para facilitar su conocimiento y construir memoria didáctica institucional.",
+          "Debe quedar únicamente como material privado del docente, sin circulación institucional."
+        ],
+        a: 2,
+        explanation: "El artículo pide presentar las planificaciones por escrito para que sean conocidas y para favorecer la memoria didáctica de la institución."
+      },
+      {
+        q: "¿Qué debe comunicar el Profesor/Maestro a estudiantes y responsables al iniciar o desarrollar el trabajo anual?",
+        options: [
+          "Sólo las fechas de evaluación y los criterios de aprobación.",
+          "Únicamente las normas de convivencia del aula.",
+          "Los contenidos y expectativas del trabajo anual, atendiendo a las particularidades de los alumnos a su cargo.",
+          "La planificación completa, sin necesidad de adaptarla al grupo."
+        ],
+        a: 2,
+        explanation: "El artículo destaca que estudiantes y responsables deben conocer contenidos y expectativas del trabajo anual, considerando las particularidades del grupo."
+      },
+      {
+        q: "Cuando el Artículo 72 menciona los estados administrativos, ¿qué responsabilidad asigna al Profesor/Maestro?",
+        options: [
+          "Cumplimentar adecuada y oportunamente los estados administrativos que estén a su cargo.",
+          "Delegar toda carga administrativa en la secretaría de la institución.",
+          "Completar estados administrativos sólo cuando haya estudiantes presentes.",
+          "Presentarlos una vez por año, al cierre del ciclo lectivo."
+        ],
+        a: 0,
+        explanation: "La norma habla de cumplir de manera adecuada y oportuna con los estados administrativos a cargo del docente."
+      },
+      {
+        q: "¿Cuál de estas situaciones aparece contemplada como tarea del Profesor/Maestro en el Artículo 72?",
+        options: [
+          "Asistir a la escuela únicamente si ese día hay estudiantes presentes.",
+          "Cumplir el cuidado de los alumnos durante entrada, salida y recreos, según lo pautado institucionalmente.",
+          "Definir por cuenta propia cambios de horario sin acuerdo institucional.",
+          "Aplicar los Acuerdos de Convivencia sólo cuando haya una sanción disciplinaria."
+        ],
+        a: 1,
+        explanation: "El artículo incluye el cuidado durante entrada, salida y recreos, y también plantea integrar los Acuerdos de Convivencia como eje transversal de la actuación docente."
+      }
     ];
 
     // ====== ESTADO DE JUEGO ======
@@ -272,9 +332,10 @@
       const correctText = q.options[q.a];
       elModalTitle.className = isCorrect ? 'ok' : 'bad';
       elModalTitle.textContent = isCorrect ? "¡Correcto!" : "Incorrecto";
+      const explanation = q.explanation ? `<br><br><strong>Para pensar:</strong> ${escapeHtml(q.explanation)}` : "";
       elModalContent.innerHTML = isCorrect
-        ? `✅ Tu respuesta es correcta.<br><strong>Opción correcta:</strong> ${escapeHtml(correctText)}`
-        : `❌ Tu respuesta no es correcta.<br><strong>La correcta era:</strong> ${escapeHtml(correctText)}`;
+        ? `✅ Tu respuesta es correcta.<br><strong>Opción correcta:</strong> ${escapeHtml(correctText)}${explanation}`
+        : `❌ Tu respuesta no es correcta.<br><strong>La correcta era:</strong> ${escapeHtml(correctText)}${explanation}`;
       elBtnNext.textContent = current < questions.length - 1 ? "Siguiente pregunta ▶️" : "Finalizar ✅";
 
       elModalBackdrop.classList.add("show");
@@ -377,7 +438,8 @@
     });
 
     document.getElementById("btnEstatuto").addEventListener("click", () => {
-      window.open("https://drive.google.com/file/d/1ct0y2Phs9b45tcL2kLm8Cl6fA6dw8Y_F/view?usp=sharing", "_blank", "noopener");
+      // Reemplazá este enlace por el PDF del Reglamento General si querés que el botón descargue esa normativa.
+      window.open("https://drive.google.com/file/d/1KAXZBXoxMXDHuGUqOkPctogrfHb6dy2h/view?usp=sharing", "_blank", "noopener");
     });
 
     document.getElementById("btnClear").addEventListener("click", async () => {
