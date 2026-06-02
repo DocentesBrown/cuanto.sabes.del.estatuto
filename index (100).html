@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Quiz Reglamento General — Artículo 72: Tareas del Profesor/Maestro</title>
+  <style>
+    :root{
+      --azul:#24496e; --violeta:#4d3069; --celeste:#3d8fb0; --beige:#f3efdc; --rojo:#da6863; --ok:#2e7d32; --bad:#c62828;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0; font-family:system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      background:var(--beige); color:var(--azul);
+      display:flex; min-height:100vh; align-items:center; justify-content:center;
+    }
+    .app{
+      width:92%; max-width:560px; background:#fff; border-radius:20px;
+      box-shadow:0 10px 30px rgba(0,0,0,.15); padding:18px 16px 90px; /* espacio para la barra inferior */
+      position:relative;
+    }
+    header{ text-align:center; margin-bottom:8px;}
+    header h1{ margin:0; font-size:1.35rem; color:var(--azul); }
+    header p{ margin:6px 0 0; color:var(--violeta); font-weight:600; }
+
+    .timer{ margin:10px 0 6px; font-weight:700; color:var(--rojo); text-align:center; }
+
+    /* Barra de agotamiento con color dinámico (verde → rojo) */
+    .exhaust{ height:12px; background:#e9edf0; border-radius:999px; overflow:hidden; box-shadow:inset 0 1px 2px rgba(0,0,0,.08); margin:0 0 12px; }
+    .exhaust .bar{ height:100%; width:100%; border-radius:999px; transition:width .08s linear; }
+
+    /* Mejor contraste para la pregunta */
+    .question{
+      font-size:1.1rem; font-weight:800; margin:6px 0 12px;
+      background:var(--azul); color:#fff; padding:12px 14px; border-radius:14px; line-height:1.35;
+      box-shadow:0 2px 10px rgba(0,0,0,.08);
+    }
+
+    .options{ display:grid; gap:8px; }
+
+    .btn{
+      width:100%; padding:12px 14px; border:0; border-radius:12px; cursor:pointer;
+      font-size:1rem; color:#102538; background:color-mix(in srgb, var(--celeste) 35%, white);
+      transition:transform .05s ease, opacity .15s ease, box-shadow .15s ease;
+      box-shadow:0 1px 0 rgba(0,0,0,.06);
+    }
+    .btn:hover{ opacity:.95 }
+    .btn:active{ transform:scale(.995) }
+    .btn.alt{ background:color-mix(in srgb, var(--rojo) 30%, white); }
+    .btn.dark{ background:color-mix(in srgb, var(--azul) 25%, white); }
+    .btn.violet{ background:color-mix(in srgb, var(--violeta) 28%, white); }
+
+    .btn-row{ display:grid; gap:10px; margin-top:12px; }
+    .muted{ color:#666; font-size:.95rem; text-align:center; }
+    .hidden{ display:none !important; }
+
+    .result h2{ margin:0 0 6px; color:var(--violeta); }
+    .result p{ margin:6px 0; }
+    .pill{ display:inline-block; padding:2px 8px; border-radius:999px; background:#eef4f8; color:#274b6d; font-size:.8rem; }
+
+    .leaderboard{ margin-top:14px; background:#fff; border:1px solid #e8e6de; border-radius:14px; overflow:hidden; }
+    table{ width:100%; border-collapse:collapse; }
+    thead th{ background:var(--violeta); color:#fff; padding:10px; font-weight:700; font-size:.95rem; text-align:center; }
+    tbody td{ border-top:1px solid #eee; padding:9px; font-size:.95rem; text-align:center; color:#1d2a38; }
+
+    /* Barra inferior fija dentro de la tarjeta */
+    .bottombar{ position:sticky; bottom:0; left:0; right:0; background:linear-gradient(to top, #ffffff, rgba(255,255,255,.75)); padding:12px 0 8px; backdrop-filter:saturate(1.1) blur(2px); }
+    .bottombar .wrap{ display:grid; gap:8px; grid-template-columns: 1fr 1fr; padding:0 2px; }
+    @media (min-width:520px){ .bottombar .wrap{ grid-template-columns: 1fr 1fr 1fr; } }
+
+    /* MODALES */
+    .modal-backdrop{ position:fixed; inset:0; background:rgba(0,0,0,.35); display:none; align-items:center; justify-content:center; padding:18px; }
+    .modal-backdrop.show{ display:flex; }
+    .modal{ width:100%; max-width:520px; background:var(--beige); color:var(--azul); border-radius:18px; padding:18px 16px; box-shadow:0 12px 30px rgba(0,0,0,.25); }
+    .modal h3{ margin:0 0 8px; font-size:1.15rem; }
+    .modal h3.ok{ color:var(--ok); }
+    .modal h3.bad{ color:var(--bad); }
+    .modal p{ margin:0 0 12px; }
+    .spinner{ width:28px; height:28px; border-radius:50%; border:3px solid rgba(0,0,0,.1); border-top-color:var(--violeta); animation:spin .8s linear infinite; margin:0 auto 10px; }
+    @keyframes spin{ to{ transform:rotate(360deg);} }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header>
+      <h1>Docentes Brown</h1>
+      <p>Reglamento General de Instituciones Educativas — Artículo 72</p>
+    </header>
+
+    <!-- Game -->
+    <div id="game">
+      <div class="timer">⏳ Tiempo restante: <span id="timer">60</span>s</div>
+      <div class="exhaust"><div class="bar" id="exhaustBar"></div></div>
+      <div class="question" id="question"></div>
+      <div class="options" id="options"></div>
+      <p class="muted" id="progress"></p>
+    </div>
+
+    <!-- Result -->
+    <div id="result" class="result hidden">
+      <h2>¡Juego terminado!</h2>
+      <p>Puntaje obtenido: <span id="finalScore" class="pill">0</span></p>
+      <p>Tiempo total usado: <span id="finalTime" class="pill">0s</span></p>
+      <p>Respuestas correctas: <span id="finalCorrect" class="pill">0</span>/<span id="finalTotal" class="pill">0</span></p>
+      <!-- Sin botón de volver a jugar -->
+    </div>
+
+    <!-- Leaderboard -->
+    <div id="leaderboardWrap" class="leaderboard hidden">
+      <table>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Jugador</th>
+            <th>Puntaje</th>
+            <th>Tiempo (s)</th>
+            <th>Fecha</th>
+          </tr>
+        </thead>
+        <tbody id="leaderboardBody">
+          <tr><td colspan="5" class="muted">Cargando…</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <p class="muted">Puntaje: 100 por acierto + 1 por cada segundo ahorrado.</p>
+
+    <!-- Barra inferior con acciones (abajo) -->
+    <div class="bottombar">
+      <div class="wrap">
+        <button class="btn violet" id="btnToggleLB">📊 Ver / ocultar posiciones</button>
+        <button class="btn dark" id="btnEstatuto">📕 Descargar Reglamento</button>
+        <button class="btn alt" id="btnClear">🗑️ Limpiar tabla</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL de respuesta -->
+  <div id="modalBackdrop" class="modal-backdrop" role="dialog" aria-modal="true">
+    <div class="modal">
+      <h3 id="modalTitle">Respuesta</h3>
+      <p id="modalContent"></p>
+      <div class="btn-row">
+        <button id="btnNext" class="btn">Siguiente pregunta ▶️</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL de espera final -->
+  <div id="waitBackdrop" class="modal-backdrop" role="alertdialog" aria-live="polite">
+    <div class="modal" style="text-align:center">
+      <div class="spinner"></div>
+      <h3>Por favor, espere…</h3>
+      <p>Mostrando la tabla de posiciones en un instante.</p>
+    </div>
+  </div>
+
+  <script>
+    // ====== CONFIG ======
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwX8whu7tz-FnGiZ0Eo9rzOJZKjxF3fQQWpaTXpV98vDG0mIDsg0Ygca_WyEiRYcSOG/exec";
+    const TIEMPO_PREGUNTA_MS = 60000; // 60s en milisegundos
+
+    // ====== PREGUNTAS ======
+    const questions = [
+      {
+        q: "Según el Artículo 72, ¿cómo se define al Profesor/Maestro dentro de la institución?",
+        options: [
+          "Como personal docente de base que ejecuta el diseño curricular en el aula o en el espacio donde se produce el acto educativo.",
+          "Como integrante del equipo de conducción encargado de supervisar la tarea administrativa de la escuela.",
+          "Como personal auxiliar que acompaña las clases cuando lo solicita la dirección.",
+          "Como docente que sólo interviene en la evaluación final de los aprendizajes."
+        ],
+        a: 0,
+        explanation: "El artículo lo define como personal docente de base y ubica su tarea central en la ejecución del diseño curricular, compartida con el equipo docente y en el marco del Proyecto Institucional."
+      },
+      {
+        q: "¿Qué relación plantea el Artículo 72 entre el Profesor/Maestro y el Proyecto Institucional?",
+        options: [
+          "Debe conocerlo, pero no tiene obligación de participar en su elaboración o ajuste.",
+          "Debe participar en su elaboración, implementación y ajuste, y también en acciones de autoevaluación institucional.",
+          "Debe aplicarlo sólo cuando exista una indicación escrita de la supervisión.",
+          "Debe reemplazarlo por su planificación personal cuando considere que es necesario."
+        ],
+        a: 1,
+        explanation: "La participación docente no aparece como algo decorativo: el artículo incluye elaboración, implementación, ajuste del Proyecto Institucional y autoevaluación."
+      },
+      {
+        q: "Respecto de la planificación, ¿cuál de estas opciones se ajusta mejor al Artículo 72?",
+        options: [
+          "La planificación es opcional si el docente ya tiene experiencia en el cargo.",
+          "Debe presentarse sólo ante una visita de inspección o pedido formal de la dirección.",
+          "Debe presentarse por escrito para facilitar su conocimiento y construir memoria didáctica institucional.",
+          "Debe quedar únicamente como material privado del docente, sin circulación institucional."
+        ],
+        a: 2,
+        explanation: "El artículo pide presentar las planificaciones por escrito para que sean conocidas y para favorecer la memoria didáctica de la institución."
+      },
+      {
+        q: "¿Qué debe comunicar el Profesor/Maestro a estudiantes y responsables al iniciar o desarrollar el trabajo anual?",
+        options: [
+          "Sólo las fechas de evaluación y los criterios de aprobación.",
+          "Únicamente las normas de convivencia del aula.",
+          "Los contenidos y expectativas del trabajo anual, atendiendo a las particularidades de los alumnos a su cargo.",
+          "La planificación completa, sin necesidad de adaptarla al grupo."
+        ],
+        a: 2,
+        explanation: "El artículo destaca que estudiantes y responsables deben conocer contenidos y expectativas del trabajo anual, considerando las particularidades del grupo."
+      },
+      {
+        q: "Cuando el Artículo 72 menciona los estados administrativos, ¿qué responsabilidad asigna al Profesor/Maestro?",
+        options: [
+          "Cumplimentar adecuada y oportunamente los estados administrativos que estén a su cargo.",
+          "Delegar toda carga administrativa en la secretaría de la institución.",
+          "Completar estados administrativos sólo cuando haya estudiantes presentes.",
+          "Presentarlos una vez por año, al cierre del ciclo lectivo."
+        ],
+        a: 0,
+        explanation: "La norma habla de cumplir de manera adecuada y oportuna con los estados administrativos a cargo del docente."
+      },
+      {
+        q: "¿Cuál de estas situaciones aparece contemplada como tarea del Profesor/Maestro en el Artículo 72?",
+        options: [
+          "Asistir a la escuela únicamente si ese día hay estudiantes presentes.",
+          "Cumplir el cuidado de los alumnos durante entrada, salida y recreos, según lo pautado institucionalmente.",
+          "Definir por cuenta propia cambios de horario sin acuerdo institucional.",
+          "Aplicar los Acuerdos de Convivencia sólo cuando haya una sanción disciplinaria."
+        ],
+        a: 1,
+        explanation: "El artículo incluye el cuidado durante entrada, salida y recreos, y también plantea integrar los Acuerdos de Convivencia como eje transversal de la actuación docente."
+      }
+    ];
+
+    // ====== ESTADO DE JUEGO ======
+    let current = 0;
+    let score = 0;
+    let rafId = null;
+    let timeStart = 0; // timestamp de inicio de pregunta
+    let elapsed = 0;   // ms transcurridos en la pregunta actual
+    let totalTimeUsed = 0; // en segundos redondeados
+    let playerName = null; // se pide al final
+    let correctCount = 0;
+
+    // ====== NODOS ======
+    const elTimer = document.getElementById("timer");
+    const elQuestion = document.getElementById("question");
+    const elOptions = document.getElementById("options");
+    const elProgress = document.getElementById("progress");
+    const elGame = document.getElementById("game");
+    const elResult = document.getElementById("result");
+    const elFinalScore = document.getElementById("finalScore");
+    const elFinalTime = document.getElementById("finalTime");
+    const elFinalCorrect = document.getElementById("finalCorrect");
+    const elFinalTotal = document.getElementById("finalTotal");
+    const elLBWrap = document.getElementById("leaderboardWrap");
+    const elLBTbody = document.getElementById("leaderboardBody");
+
+    const elModalBackdrop = document.getElementById("modalBackdrop");
+    const elModalContent = document.getElementById("modalContent");
+    const elModalTitle = document.getElementById("modalTitle");
+    const elBtnNext = document.getElementById("btnNext");
+
+    const elExhaust = document.getElementById("exhaustBar");
+    const elWait = document.getElementById("waitBackdrop");
+
+    // ====== ARRANQUE ======
+    startQuiz();
+
+    function startQuiz(){
+      cancelAnimationFrame(rafId);
+      score = 0; current = 0; totalTimeUsed = 0; correctCount = 0; playerName = null;
+      elResult.classList.add("hidden");
+      elLBWrap.classList.add("hidden");
+      elGame.classList.remove("hidden");
+      if(elWait) elWait.classList.remove("show");
+      renderQuestion();
+      beginTimer();
+    }
+
+    function renderQuestion(){
+      const q = questions[current];
+      elQuestion.textContent = q.q;
+      elOptions.innerHTML = "";
+      q.options.forEach((opt, i) => {
+        const btn = document.createElement("button");
+        btn.className = "btn";
+        btn.textContent = opt;
+        btn.onclick = () => selectAnswer(i);
+        elOptions.appendChild(btn);
+      });
+      elapsed = 0;
+      elTimer.textContent = Math.ceil((TIEMPO_PREGUNTA_MS - elapsed)/1000);
+      elProgress.textContent = `Pregunta ${current+1} de ${questions.length}`;
+      updateExhaust(1); // barra llena al inicio
+    }
+
+    function beginTimer(){
+      cancelAnimationFrame(rafId);
+      timeStart = performance.now();
+      const loop = (now) => {
+        elapsed = now - timeStart;
+        const remaining = Math.max(0, TIEMPO_PREGUNTA_MS - elapsed);
+        elTimer.textContent = Math.ceil(remaining/1000);
+        updateExhaust(remaining / TIEMPO_PREGUNTA_MS);
+        if(remaining <= 0){
+          totalTimeUsed += Math.round(TIEMPO_PREGUNTA_MS/1000);
+          showAnswerModal(false);
+          return; // detener el loop hasta siguiente pregunta
+        }
+        rafId = requestAnimationFrame(loop);
+      };
+      rafId = requestAnimationFrame(loop);
+    }
+
+    function selectAnswer(idx){
+      cancelAnimationFrame(rafId);
+      const q = questions[current];
+      const remaining = Math.max(0, TIEMPO_PREGUNTA_MS - elapsed);
+      const used = (TIEMPO_PREGUNTA_MS - remaining) / 1000; // en s
+      totalTimeUsed += Math.round(used);
+
+      const isCorrect = (idx === q.a);
+      if(isCorrect){
+        const bonus = Math.round((remaining/1000) * 1); // 1 punto por segundo ahorrado
+        score += 100 + bonus;
+        correctCount++;
+      }
+      showAnswerModal(isCorrect);
+    }
+
+    function showAnswerModal(isCorrect){
+      const q = questions[current];
+      const correctText = q.options[q.a];
+      elModalTitle.className = isCorrect ? 'ok' : 'bad';
+      elModalTitle.textContent = isCorrect ? "¡Correcto!" : "Incorrecto";
+      const explanation = q.explanation ? `<br><br><strong>Para pensar:</strong> ${escapeHtml(q.explanation)}` : "";
+      elModalContent.innerHTML = isCorrect
+        ? `✅ Tu respuesta es correcta.<br><strong>Opción correcta:</strong> ${escapeHtml(correctText)}${explanation}`
+        : `❌ Tu respuesta no es correcta.<br><strong>La correcta era:</strong> ${escapeHtml(correctText)}${explanation}`;
+      elBtnNext.textContent = current < questions.length - 1 ? "Siguiente pregunta ▶️" : "Finalizar ✅";
+
+      elModalBackdrop.classList.add("show");
+      elBtnNext.onclick = () => {
+        elModalBackdrop.classList.remove("show");
+        nextQuestionOrFinish();
+      };
+    }
+
+    function nextQuestionOrFinish(){
+      current++;
+      if(current < questions.length){
+        renderQuestion();
+        beginTimer();
+      } else {
+        endQuiz();
+      }
+    }
+
+    async function endQuiz(){
+      // Pedir nombre al final
+      if(!playerName){
+        playerName = prompt("Ingresá tu nombre para guardar tu puntaje:") || "Anónimo";
+      }
+
+      // Mostrar ventana de espera mientras se guarda y carga TOP 15
+      if(elWait) elWait.classList.add("show");
+
+      elGame.classList.add("hidden");
+      elResult.classList.remove("hidden");
+      elFinalScore.textContent = score;
+      elFinalTime.textContent = `${totalTimeUsed}s`;
+      elFinalCorrect.textContent = correctCount;
+      elFinalTotal.textContent = questions.length;
+
+      try{
+        await fetch(`${SCRIPT_URL}?action=add&nombre=${encodeURIComponent(playerName)}&puntaje=${encodeURIComponent(score)}&tiempo=${encodeURIComponent(totalTimeUsed)}`);
+      }catch(e){ console.error(e); /* Silenciamos error pero seguimos */ }
+
+      elLBWrap.classList.remove("hidden");
+      await loadLeaderboard();
+
+      if(elWait) elWait.classList.remove("show");
+    }
+
+    // ====== LEADERBOARD GLOBAL (Apps Script) ======
+    async function loadLeaderboard(){
+      elLBTbody.innerHTML = `<tr><td colspan=\"5\" class=\"muted\">Cargando…</td></tr>`;
+      try{
+        const res = await fetch(`${SCRIPT_URL}?action=get`);
+        const rows = await res.json();
+        const data = (rows || []).slice(1).filter(r => r && r.length);
+        data.sort((a,b) => (Number(b[1]||0) - Number(a[1]||0)) || (Number(a[2]||0) - Number(b[2]||0)));
+        if(data.length === 0){
+          elLBTbody.innerHTML = `<tr><td colspan=\"5\" class=\"muted\">No hay registros aún.</td></tr>`;
+          return;
+        }
+        elLBTbody.innerHTML = "";
+        data.slice(0,15).forEach((r, i) => { // TOP 15
+          const tr = document.createElement("tr");
+          const fecha = r[3] ? formatDate(r[3]) : "-";
+          tr.innerHTML = `
+            <td>${i+1}</td>
+            <td>${escapeHtml(r[0] ?? "—")}</td>
+            <td>${Number(r[1]||0)}</td>
+            <td>${Number(r[2]||0)}</td>
+            <td>${fecha}</td>
+          `;
+          elLBTbody.appendChild(tr);
+        });
+      }catch(e){
+        console.error(e);
+        elLBTbody.innerHTML = `<tr><td colspan=\"5\" class=\"muted\">Error al cargar la tabla.</td></tr>`;
+      }
+    }
+
+    function formatDate(v){
+      const d = new Date(v);
+      if(!isNaN(d.getTime())){
+        const dd = String(d.getDate()).padStart(2,"0");
+        const mm = String(d.getMonth()+1).padStart(2,"0");
+        const yyyy = d.getFullYear();
+        const hh = String(d.getHours()).padStart(2,"0");
+        const mi = String(d.getMinutes()).padStart(2,"0");
+        return `${dd}/${mm}/${yyyy} ${hh}:${mi}`;
+      }
+      return String(v);
+    }
+
+    function escapeHtml(str){
+      return String(str).replace(/[&<>"']/g, s => ({ "&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;" }[s]));
+    }
+
+    // ====== BOTONES INFERIORES ======
+    document.getElementById("btnToggleLB").addEventListener("click", async () => {
+      elLBWrap.classList.toggle("hidden");
+      if(!elLBWrap.classList.contains("hidden")){
+        await loadLeaderboard();
+      }
+    });
+
+    document.getElementById("btnEstatuto").addEventListener("click", () => {
+      // Reemplazá este enlace por el PDF del Reglamento General si querés que el botón descargue esa normativa.
+      window.open("https://drive.google.com/file/d/1KAXZBXoxMXDHuGUqOkPctogrfHb6dy2h/view?usp=sharing", "_blank", "noopener");
+    });
+
+    document.getElementById("btnClear").addEventListener("click", async () => {
+      const clave = prompt("Ingrese la clave para limpiar la tabla:");
+      if(!clave) return;
+      try{
+        const res = await fetch(`${SCRIPT_URL}?action=clear&clave=${encodeURIComponent(clave)}`);
+        const text = await res.text();
+        alert(text);
+        if(!elLBWrap.classList.contains("hidden")){
+          await loadLeaderboard();
+        }
+      }catch(e){ console.error(e); alert("Error al limpiar la tabla."); }
+    });
+
+    // ====== BARRA DINÁMICA ======
+    function updateExhaust(frac){
+      const f = Math.max(0, Math.min(1, frac));
+      const hue = Math.round(120 * f); // 120=verde → 0=rojo
+      const hue2 = Math.max(0, hue - 25);
+      const pct = Math.max(2, Math.round(f*100)); // nunca 0 para que no desaparezca
+      if(elExhaust){
+        elExhaust.style.width = pct + "%";
+        elExhaust.style.background = `linear-gradient(90deg, hsl(${hue}, 70%, 45%), hsl(${hue2}, 70%, 55%))`;
+      }
+    }
+  </script>
+</body>
+</html>
